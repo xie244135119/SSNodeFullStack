@@ -1,0 +1,62 @@
+# 生产环境配置
+app:
+  port: 3001
+  globalPrefix: api
+  corsOrigins:
+    - 'http://localhost:6177'
+
+database:
+  type: better-sqlite3
+  # 仅目录:文件名由程序定死为 template.<env>.sqlite(prod=template.prod.sqlite),不外配
+  # 部署时由 publish-common 注入 backendDataDir(绝对路径),或 DB_DIR env 覆盖
+  dir: data
+  synchronize: false
+  logging:
+    - error
+
+jwt:
+  secret: ''
+  expiresIn: 8h
+
+log:
+  level: warn
+
+# 限流:每分钟 60 次
+throttle:
+  limit: 60
+  ttl: 60
+  whitelist:
+    - /api/login
+    - /api/ssologin
+    - /api/user/captcha
+    - /api/user/islogin
+
+# 文件上传:nginx 静态资源目录
+upload:
+  urlPrefix: /static/uploads
+  storagePath: /data/uploads
+  allowedExt:
+    - .jpg
+    - .jpeg
+    - .png
+    - .webp
+    - .gif
+    - .mp4
+  maxSize: 10485760
+
+# 超管账号:yaml 为权威,启动时 user.service 把 DB reconcile 到此值
+# (改 current/config/config.prod.yaml 或 ADMIN_PASSWORD env + 重启 即完成轮换,如三月一换)。
+# prod 真值已入库本 yaml(systemd/pm2 直读);ADMIN_PASSWORD env 为可选覆盖(docker 经 .env、
+# 或免改 yaml 轮换时用)。占位值(change-me/空)启动跳过 reconcile(不写弱默认),作防御兜底。
+admin:
+  username: admin
+  # ⚠️ 模板占位:新项目务必改成强密码(启动 reconcile 到 DB)
+  password: ''
+
+# 大屏 API 签名加密(无 token、无过期)
+# signKey 与前端 VITE_APP_SIGN_KEY 须逐字一致;轮换改本 yaml + 重启或 APP_SIGN_KEY env 覆盖。
+# cryptKey 后期响应/body 加密用(本期未启用,占位不可移除——aes-js 解密侧待二期端到端做)。
+appSign:
+  signKey: ''
+  cryptKey: ''
+  tsWindow: 300
