@@ -1,4 +1,3 @@
-
 ---
 version: alpha
 name: Airtable-design-analysis

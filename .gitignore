@@ -52,4 +52,3 @@ web/scripts/server.config.json
 # pack 产物（运维打包 tarball，本地生成、不入库）
 release
 .opencode
-docs/

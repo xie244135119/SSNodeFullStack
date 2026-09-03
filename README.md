@@ -81,7 +81,7 @@ mkdir -p /tmp/be-lock && cp backend/package.json /tmp/be-lock/ \
 
 ### 后台主题(Airtable 风格)
 仅作用于 `/background` 后台路由树;大屏端不套此主题。入口:`web/src/styles/theme.ts`(`airtableTheme`)→ `Background.tsx` 的 `<ConfigProvider>`。
-UI 规范见根 `DESIGN.md`;后期想换自己的风格:替换/修改 `theme.ts` 的 token 即可,`DESIGN.md` 可删。
+UI 规范见 `docs/airtable/DESIGN.md`;后期想换自己的风格:替换/修改 `theme.ts` 的 token 即可,该规范文档可删。
 
 ### backend 构建(单文件 bundle)
 - `pnpm --filter backend build` = webpack 单文件打包 `src/main.ts` → `dist/main.js`,自动 bump version。

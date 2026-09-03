@@ -6,7 +6,7 @@
 
 1. `AGENTS.md` — 命令、目录地图、硬约束、编码约定
 2. `README.md` — 从模板起新项目的必改清单
-3. 改到哪个域,再看对应文档:`DESIGN.md`(后台 UI 规范)/ `docs/api-security.md`(鉴权)
+3. 改到哪个域,再看对应文档:`docs/airtable/DESIGN.md`(后台 UI 规范)/ `docs/api-security.md`(鉴权)
 
 ## Claude Code 专属约定
 
