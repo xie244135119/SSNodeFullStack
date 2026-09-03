@@ -1,54 +1,26 @@
-# Logs
-logs
-*.log
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-pnpm-debug.log*
-lerna-debug.log*
+# 编排仓忽略(生成项目用的 .gitignore 在 templates/root/.gitignore)
 
+# deps
 node_modules
+
+# build
 dist
-dist-ssr
-*.local
+templates/web/dist
+templates/backend/dist
+templates/backend/dist-bundle
+templates/backend/release
+templates/backend/rel
 
-# Editor directories and files
-.vscode/*
-!.vscode/extensions.json
-.idea
+# deploy config(本地凭证)
+templates/web/scripts/server.config.json
+templates/backend/scripts/server.config.cjs
+
+# sqlite data
+templates/backend/data
+
+# 生成测试产物
+/tmp
+
+# editor/misc
 .DS_Store
-*.suo
-*.ntvs*
-*.njsproj
-*.sln
-*.sw?
-dist.*
-.git
-.omo
-.next
-.umi
-src/.umi
-.umi-production
-.playwright-mcp
 .claude
-
-# backend build & sqlite data
-backend/dist
-backend/data
-# backend 单文件 bundle 产物（运维 pack 临时构建）
-backend/dist-bundle
-# backend buildops 运维包产物（本地生成、不入库）
-backend/release
-# backend buildops release 产物（releases/<ver>-<ts>，本地生成、不入库）
-backend/rel
-
-# deploy config (contains server credentials / sign key)
-scripts/deploy.config.json
-# backend 部署 SSH 凭证（含服务器密码/IP，本地填写、不入库）
-backend/scripts/server.config.cjs
-# web 部署 SSH 凭证（含服务器密码/IP，本地填写、不入库；模板见 server.config.example.json）
-web/scripts/server.config.json
-
-# pack 产物（运维打包 tarball，本地生成、不入库）
-release
-.opencode

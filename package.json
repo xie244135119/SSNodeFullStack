@@ -1,25 +1,22 @@
 {
-  "name": "fullstack-template",
-  "version": "1.0.0",
-  "description": "全栈模板 — monorepo 编排根(web + backend)",
+  "name": "ssnodefullstack",
+  "version": "0.1.0",
+  "description": "SSNodeFullStack — 脚手架源仓(create-ssnode-app CLI + templates)",
   "private": true,
   "engines": {
     "node": ">=20.11.0"
   },
   "workspaces": [
-    "web",
-    "backend"
+    "cli",
+    "templates/web",
+    "templates/backend"
   ],
   "scripts": {
-    "dev": "pnpm -r --parallel run dev",
-    "build": "pnpm -r run build",
+    "cli": "node cli/index.js",
+    "dev": "pnpm --filter web --filter backend --parallel run dev",
+    "build": "pnpm --filter web --filter backend run build",
     "lint": "pnpm -r run lint",
-    "publish": "node scripts/publish.cjs",
-    "publish:web": "node scripts/publish.cjs --only web",
-    "publish:backend": "node scripts/publish.cjs --only backend",
-    "rollback": "node scripts/rollback.cjs",
-    "rollback:web": "node scripts/rollback.cjs --only web",
-    "rollback:backend": "node scripts/rollback.cjs --only backend"
+    "test": "pnpm --filter create-ssnode-app run test"
   },
   "devDependencies": {
     "node-ssh": "13.1.0",

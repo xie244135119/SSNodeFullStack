@@ -1,0 +1,31 @@
+{
+  "name": "__PKG_NAME__",
+  "version": "1.0.0",
+  "description": "__PROJECT_DESC__",
+  "private": true,
+  "engines": {
+    "node": ">=20.11.0"
+  },
+  "workspaces": [
+    "web",
+    "backend"
+  ],
+  "scripts": {
+    "dev": "pnpm -r --parallel run dev",
+    "build": "pnpm -r run build",
+    "lint": "pnpm -r run lint",
+    "publish": "node scripts/publish.cjs",
+    "publish:web": "node scripts/publish.cjs --only web",
+    "publish:backend": "node scripts/publish.cjs --only backend",
+    "rollback": "node scripts/rollback.cjs",
+    "rollback:web": "node scripts/rollback.cjs --only web",
+    "rollback:backend": "node scripts/rollback.cjs --only backend"
+  },
+  "devDependencies": {
+    "node-ssh": "13.1.0",
+    "shelljs": "0.8.5"
+  },
+  "pnpm": {
+    "requiredScripts": []
+  }
+}

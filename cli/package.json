@@ -1,0 +1,19 @@
+{
+  "name": "create-ssnode-app",
+  "version": "0.1.0",
+  "description": "SSNodeFullStack 脚手架 CLI — 生成全栈 / 仅前端 / 仅后端项目",
+  "private": true,
+  "type": "module",
+  "bin": {
+    "create-ssnode-app": "index.js"
+  },
+  "engines": {
+    "node": ">=20.11.0"
+  },
+  "dependencies": {
+    "@clack/prompts": "0.11.0"
+  },
+  "scripts": {
+    "test": "node test/run.mjs"
+  }
+}

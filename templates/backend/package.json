@@ -1,6 +1,6 @@
 {
   "name": "backend",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "全栈模板 - 后台服务(NestJS + SQLite + TypeORM)",
   "private": true,
   "engines": {

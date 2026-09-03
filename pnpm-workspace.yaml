@@ -1,3 +1,4 @@
 packages:
-  - 'web'
-  - 'backend'
+  - 'cli'
+  - 'templates/web'
+  - 'templates/backend'
