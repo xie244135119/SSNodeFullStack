@@ -18,14 +18,24 @@
   ],
   "scripts": {
     "prepack": "node build-pack.mjs",
-    "postpack": "node build-pack.mjs --clean"
+    "postpack": "node build-pack.mjs --clean",
+    "publish": "npm publish --registry=https://registry.npmjs.org"
   },
   "engines": {
     "node": ">=20.11.0"
   },
   "keywords": [
-    "scaffold", "cli", "fullstack", "react", "antd", "nestjs", "sqlite",
-    "vite", "datav", "admin-dashboard", "create-ssnode-app"
+    "scaffold",
+    "cli",
+    "fullstack",
+    "react",
+    "antd",
+    "nestjs",
+    "sqlite",
+    "vite",
+    "datav",
+    "admin-dashboard",
+    "create-ssnode-app"
   ],
   "license": "ISC",
   "repository": {
