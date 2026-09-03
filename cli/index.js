@@ -48,9 +48,55 @@ function isValidName(name) {
     name.length <= 214 && !name.startsWith('.') && !name.startsWith('_');
 }
 
+/** 基础指令与参数校验;命中 -v/-h 直接输出退出 */
+function handleBaseFlags(argv) {
+  const KNOWN_FLAGS = new Set(['--stack', '--yes', '-v', '--version', '-h', '--help']);
+
+  if (argv.includes('-v') || argv.includes('--version')) {
+    const pkg = JSON.parse(readFileSync(join(__dirname, 'package.json'), 'utf-8'));
+    console.log(`create-ssnode-app v${pkg.version}`);
+    process.exit(0);
+  }
+  if (argv.includes('-h') || argv.includes('--help')) {
+    console.log(HELP_TEXT);
+    process.exit(0);
+  }
+  // 未知 flag 报错(此前会被静默忽略,用户拼错参数毫无提示)
+  for (let i = 0; i < argv.length; i++) {
+    const a = argv[i];
+    if (!a.startsWith('-')) continue;
+    if (a === '--stack') { i += 1; continue; } // 跳过其取值
+    if (!KNOWN_FLAGS.has(a)) {
+      console.error(`✗ 未知选项:${a}\n\n${HELP_TEXT}`);
+      process.exit(1);
+    }
+  }
+}
+
+const HELP_TEXT = `create-ssnode-app — SSNodeFullStack 脚手架
+
+用法:
+  npm create ssnode-app <目录> [选项]
+  node cli/index.js <目录> [选项]        (源仓内)
+
+选项:
+  --stack <fullstack|web|backend>  技术栈;指定后进入非交互模式(CI 可用)
+                                   fullstack = web + backend monorepo
+                                   web       = 仅前端(checkToken=false,mock 兜底)
+                                   backend   = 仅后端(管理走 Swagger /docs)
+  --yes                            非交互模式下跳过 git init / pnpm install 询问
+  -v, --version                    显示版本
+  -h, --help                       显示本帮助
+
+不带选项直接运行 = 交互模式(问答式)。
+示例:
+  npm create ssnode-app my-app
+  node cli/index.js /tmp/demo --stack fullstack --yes`;
+
 async function main() {
   const argv = process.argv.slice(2);
-  const argPath = argv.find((a) => !a.startsWith('--'));
+  handleBaseFlags(argv);
+  const argPath = argv.find((a) => !a.startsWith('--') && !a.startsWith('-'));
   const argStack = argv.includes('--stack') ? argv[argv.indexOf('--stack') + 1] : null;
   const isCI = argv.includes('--yes') || !!argStack; // 非交互模式(--stack 即全参数)
 
