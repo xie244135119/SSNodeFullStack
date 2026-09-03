@@ -1,19 +1,41 @@
 {
   "name": "create-ssnode-app",
   "version": "0.1.0",
-  "description": "SSNodeFullStack 脚手架 CLI — 生成全栈 / 仅前端 / 仅后端项目",
-  "private": true,
+  "description": "SSNodeFullStack 脚手架 — 生成全栈 / 仅前端 / 仅后端项目(Vite+React+AntD / NestJS+SQLite)",
   "type": "module",
   "bin": {
     "create-ssnode-app": "index.js"
   },
+  "files": [
+    "index.js",
+    "transforms.js",
+    "secrets.js",
+    "templates/root/",
+    "templates/web/",
+    "templates/backend/",
+    "templates/docs/",
+    "LICENSE"
+  ],
+  "scripts": {
+    "prepack": "node build-pack.mjs",
+    "postpack": "node build-pack.mjs --clean"
+  },
   "engines": {
     "node": ">=20.11.0"
   },
+  "keywords": [
+    "scaffold", "cli", "fullstack", "react", "antd", "nestjs", "sqlite",
+    "vite", "datav", "admin-dashboard", "create-ssnode-app"
+  ],
+  "license": "ISC",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/xie244135119/SSNodeFullStack.git"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
   "dependencies": {
     "@clack/prompts": "0.11.0"
-  },
-  "scripts": {
-    "test": "node test/run.mjs"
   }
 }

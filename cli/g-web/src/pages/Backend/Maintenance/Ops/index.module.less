@@ -1,0 +1,84 @@
+.container {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  .title {
+    font-size: 18px;
+    font-weight: 600;
+  }
+
+  .updated {
+    font-size: 12px;
+    color: #9297a0;
+  }
+}
+
+.cards {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.card {
+  border: 1px solid #dddddd;
+  border-radius: 12px;
+
+  .summary {
+    font-size: 12px;
+    color: #6b7280;
+  }
+}
+
+.statusItems {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.statusRow {
+  display: flex;
+  justify-content: space-between;
+  font-size: 13px;
+  padding: 4px 0;
+  border-bottom: 1px solid #f0f0f0;
+
+  &:last-child {
+    border-bottom: none;
+  }
+
+  .statusLabel {
+    color: #6b7280;
+  }
+
+  .statusValue {
+    color: #181d26;
+    text-align: right;
+    word-break: break-all;
+  }
+}
+
+.logBox {
+  margin: 0;
+  max-height: 320px;
+  overflow: auto;
+  padding: 8px 12px;
+  background: #f8fafc;
+  border-radius: 8px;
+  font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
+  font-size: 12px;
+  line-height: 1.6;
+  color: #4b5563;
+  white-space: pre-wrap;
+  word-break: break-all;
+
+  .logErr {
+    color: #d4351c;
+  }
+}

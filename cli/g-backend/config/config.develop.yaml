@@ -1,0 +1,62 @@
+# 开发环境配置
+app:
+  port: 3001
+  globalPrefix: api
+  corsOrigins:
+    - 'http://localhost:6177'
+
+database:
+  type: better-sqlite3
+  # 仅目录:文件名由程序定死为 g-backend.<env>.sqlite(dev=g-backend.dev.sqlite),不外配
+  dir: data
+  synchronize: true
+  logging: true
+
+jwt:
+  secret: 'af51a786cc2eb9a84e6772dd477dadc6c0db5b197404ec2346d5a1232f541da163439bc1ec7936c8822b2d2fb227396b'
+  expiresIn: 8h
+
+log:
+  level: debug
+
+# 限流:每分钟 60 次
+throttle:
+  limit: 60
+  ttl: 60
+  whitelist:
+    - /api/login
+    - /api/ssologin
+    - /api/user/captcha
+    - /api/user/islogin
+
+# 文件上传:nginx 静态资源目录
+upload:
+  # 可访问 URL 前缀(nginx location 映射)
+  urlPrefix: /static/uploads
+  # nginx 静态目录绝对路径,后端把文件写到此处
+  storagePath: ./data/uploads
+  allowedExt:
+    - .jpg
+    - .jpeg
+    - .png
+    - .webp
+    - .gif
+    - .mp4
+  maxSize: 10485760  # 10MB
+
+# 超管账号:yaml 为权威,启动时 user.service 把 DB reconcile 到此值
+# (改这里 + 重启 即完成轮换)。dev/prod 真值均入库 yaml 直读;ADMIN_PASSWORD env 为可选覆盖。
+admin:
+  username: admin
+  # ⚠️ 模板占位:新项目务必改成强密码(启动 reconcile 到 DB)
+  password: 'OwErMCyzHGOGGgGU'
+
+# 大屏 API 签名加密(无 token、无过期)
+# 签名密钥前端构建期注入 bundle,本期只启用请求侧签名;cryptKey 后期响应/body 加密用
+appSign:
+  # HMAC-SHA256 签名密钥,32+ 字符随机串,永不过期。须与 web/.env.development 逐字一致。
+  signKey: '2b4fdecf0f372187f1643926fe6a015530d518a5e2e6ba9be527052925bca771'
+  # AES-256-GCM 内容加密密钥,base64(32 字节)。本期保留不校验
+  cryptKey: 'zh9xVa2zav8yRpZuawo3tv+v2vEfNdTtU70oz0vtsxY='
+  # 时间戳允许偏差(秒),±5min
+  tsWindow: 300

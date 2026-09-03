@@ -1,0 +1,34 @@
+@SLIDER_LEFT: 40px;
+
+.background {
+  display: flex;
+  flex-direction: column;
+  transform-origin: left top;
+  background-color: #002241;
+  background-size: 100% 100%;
+
+  .layoutheaderview {
+    position: relative;
+    display: flex;
+    flex-direction: row;
+    width: 100%;
+    height: 120px;
+    background-size: 100% 100%;
+
+    .headerbg {
+      position: absolute;
+      top: 25px;
+      left: 50%;
+      transform: translateX(-50%);
+    }
+  }
+
+  .layoutcontentview {
+    position: absolute;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    box-sizing: border-box;
+  }
+}

@@ -15,7 +15,7 @@
  *   node cli/index.js my-app        (源仓内)
  *   node cli/index.js --stack web   (跳过交互,CI 用)
  */
-import { existsSync, cpSync, rmSync, readFileSync, writeFileSync, mkdirSync, readdirSync } from 'node:fs';
+import { existsSync, cpSync, rmSync, readFileSync, writeFileSync, mkdirSync, readdirSync, renameSync } from 'node:fs';
 import { join, resolve, basename, relative as pathRelative, extname as pathExtname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { spawnSync } from 'node:child_process';
@@ -24,7 +24,12 @@ import { buildTransforms, applyRules, TEXT_EXTENSIONS } from './transforms.js';
 import { generateSecrets, injectWebEnv, injectBackendYaml, verifySecretPairs } from './secrets.js';
 
 const __dirname = fileURLToPath(new URL('.', import.meta.url));
-const TEMPLATES_DIR = join(__dirname, '..', 'templates');
+// 模板目录双布局兼容:
+//   npm 包内 = <pkg>/templates(files 字段,与 index.js 同级)
+//   源仓内   = <repo>/templates(cli/ 的上一级)
+const TEMPLATES_DIR = existsSync(join(__dirname, 'templates'))
+  ? join(__dirname, 'templates')
+  : join(__dirname, '..', 'templates');
 
 /** CLI 拷贝时排除的目录/文件(构建产物、本地数据、凭证) */
 /** cpSync filter:true = 拷贝。排除构建产物、本地数据、本地凭证。 */
@@ -128,10 +133,7 @@ async function main() {
     // web 模板直接作为单包工程根
     copyDir(join(TEMPLATES_DIR, 'web'), targetDir);
     // 根胶水里 web 单包也需要的:.gitignore(内容含 dist 等)、prettier
-    for (const f of ['.gitignore', '.npmrc', '.prettierignore', '.prettierrc.cjs', 'LICENSE']) {
-      const src = join(TEMPLATES_DIR, 'root', f);
-      if (existsSync(src)) cpSync(src, join(targetDir, f));
-    }
+    copyRootFiles(targetDir, ['.gitignore', '.npmrc', '.prettierignore', '.prettierrc.cjs', 'LICENSE']);
     // web-only 免登录:没后端就没法登录,checkToken 关掉走 mock
     const envConfig = readFileSync(join(targetDir, 'public', 'env.config.js'), 'utf-8');
     writeFileSync(join(targetDir, 'public', 'env.config.js'), envConfig.replace('checkToken: true', 'checkToken: false'));
@@ -140,10 +142,7 @@ async function main() {
   } else {
     // backend 模板直接作为单包工程根
     copyDir(join(TEMPLATES_DIR, 'backend'), targetDir);
-    for (const f of ['.gitignore', '.npmrc', 'LICENSE']) {
-      const src = join(TEMPLATES_DIR, 'root', f);
-      if (existsSync(src)) cpSync(src, join(targetDir, f));
-    }
+    copyRootFiles(targetDir, ['.gitignore', '.npmrc', 'LICENSE']);
     // backend-only 的 .gitignore 需要补 backend 段(模板根 .gitignore 是全栈视角)
     const gi = readFileSync(join(targetDir, '.gitignore'), 'utf-8');
     writeFileSync(join(targetDir, '.gitignore'), gi.replace(/^backend\//gm, '').replace(/^web\//gm, ''));
@@ -343,17 +342,39 @@ ${common}
 }
 
 // ── 工具函数 ──
+/** npm 包内 dotfile 重命名还原(build-pack.mjs 的逆操作;源仓布局无此文件,跳过) */
+const DOTFILE_RESTORE = { '_gitignore': '.gitignore', '_npmrc': '.npmrc' };
 function copyDir(src, dest) {
   cpSync(src, dest, { recursive: true, filter: COPY_FILTER });
+  // 包内模板的 _gitignore/_npmrc 还原为 .gitignore/.npmrc
+  for (const [packed, real] of Object.entries(DOTFILE_RESTORE)) {
+    const p = join(dest, packed);
+    if (existsSync(p)) renameSync(p, join(dest, real));
+  }
 }
-/** 源仓 docs/ 拷进生成项目(airtable 设计规范 + api-security;AGENTS/CLAUDE 引用) */
+/** 从 templates/root 拷单文件到生成物根(处理包内 dotfile 重命名) */
+function copyRootFiles(targetDir, files) {
+  for (const f of files) {
+    // 源仓布局直接命中;npm 包布局下 .gitignore/.npmrc 是 _gitignore/_npmrc
+    const packed = DOTFILE_RESTORE[f] ? (existsSync(join(TEMPLATES_DIR, 'root', f)) ? f : DOTFILE_RESTORE[f]) : f;
+    const src = join(TEMPLATES_DIR, 'root', packed);
+    if (existsSync(src)) cpSync(src, join(targetDir, f));
+  }
+}
+/** docs/(设计规范、API 安全)拷进生成项目;源仓在 repo 根,npm 包内随包分发于 templates/docs */
 function copyDocs(targetDir) {
-  const src = join(TEMPLATES_DIR, '..', 'docs');
-  if (existsSync(src)) cpSync(src, join(targetDir, 'docs'), { recursive: true });
+  const candidates = [
+    join(TEMPLATES_DIR, 'docs'),      // 两布局同路径:templates/docs
+    join(TEMPLATES_DIR, '..', 'docs') // 源仓兜底(repo 根 docs/)
+  ];
+  const src = candidates.find((c) => existsSync(c));
+  if (src) cpSync(src, join(targetDir, 'docs'), { recursive: true });
 }
 function extnameAllow(filename) {
   const ext = pathExtname(filename);
-  return TEXT_EXTENSIONS.has(ext) || filename === '.gitignore' || filename === '.npmrc' || filename === '.prettierignore' || filename === '.dockerignore' || filename.startsWith('.env');
+  return TEXT_EXTENSIONS.has(ext) || filename === '.gitignore' || filename === '.npmrc' ||
+    filename === '_gitignore' || filename === '_npmrc' ||
+    filename === '.prettierignore' || filename === '.dockerignore' || filename.startsWith('.env');
 }
 function run(cmd, args, cwd, quietOk) {
   const r = spawnSync(cmd, args, { cwd, stdio: quietOk ? 'pipe' : 'inherit' });
