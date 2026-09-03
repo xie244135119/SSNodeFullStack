@@ -1,0 +1,80 @@
+name: CI
+
+# 脚手架守卫:三个 stack 变体各生成一个项目 → install → build(+ fullstack 冒烟)。
+# 模板或 CLI 改坏,这里当场红,不用等下次生成项目才发现。
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  generate-and-build:
+    name: ${{ matrix.stack }} 变体
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        stack: [fullstack, web, backend]
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      # CLI 依赖(@clack/prompts)
+      - name: Install CLI deps
+        run: pnpm install --frozen-lockfile
+
+      - name: Generate ${{ matrix.stack }} project
+        run: node cli/index.js /tmp/gen/p-${{ matrix.stack }} --stack ${{ matrix.stack }} --yes
+
+      - name: Residual scan (template identity strings must be gone)
+        run: |
+          cd /tmp/gen/p-${{ matrix.stack }}
+          # fullstack-template / template.prod|dev|develop(.sqlite|.|$) / 模板项目 / __PKG_NAME__
+          if grep -rnE "fullstack-template|template\.(prod|dev|develop)(\.sqlite)?|<模板项目>|__PKG_NAME__|__PROJECT_DESC__" \
+              --exclude-dir=node_modules --exclude-dir=.git --exclude-dir=dist -r . 2>/dev/null | grep -v "^./docs/"; then
+            echo "✗ 生成物残留模板身份串"; exit 1
+          fi
+          echo "✓ 无残留"
+
+      - name: Install generated project
+        run: |
+          cd /tmp/gen/p-${{ matrix.stack }}
+          pnpm install --no-frozen-lockfile
+
+      - name: Build generated project
+        run: |
+          cd /tmp/gen/p-${{ matrix.stack }}
+          pnpm build
+
+      # 冒烟仅 fullstack:backend develop 起动 + /api/version(专抓迁移显式注册类问题)
+      - name: Smoke test (fullstack only)
+        if: matrix.stack == 'fullstack'
+        run: |
+          cd /tmp/gen/p-fullstack/backend
+          nohup pnpm dev > /tmp/be.log 2>&1 &
+          for i in $(seq 1 30); do
+            if curl -s -m 2 http://127.0.0.1:3001/api/version > /dev/null 2>&1; then break; fi
+            sleep 2
+          done
+          RESP=$(curl -s -m 5 http://127.0.0.1:3001/api/version || true)
+          echo "version resp: $RESP"
+          echo "$RESP" | grep -q '"code":200' || { echo "✗ backend 冒烟失败"; cat /tmp/be.log; exit 1; }
+          echo "✓ backend 冒烟通过"
+
+      - name: Upload backend log on failure
+        if: failure() && matrix.stack == 'fullstack'
+        uses: actions/upload-artifact@v4
+        with:
+          name: backend-smoke-log
+          path: /tmp/be.log

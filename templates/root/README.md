@@ -1,8 +1,8 @@
-# fullstack-template
+# __PKG_NAME__
 
 > 个人全栈项目脚手架。从某全栈项目抽离公共框架而来:可视化大屏(只读)+ 后台管理系统(配置台)+ NestJS 后端(SQLite)。业务主线:**后台配置 → SQLite → 大屏消费**。
 
-`cp -r` 本目录 → 改 5 处 name/密钥 → 起步一个新全栈项目。框架层(双轨鉴权、SQLite 加固、docker/systemd/pm2 部署引擎、Capistrano 回滚)开箱即用,业务面已收敛到最小示例。
+本项目由 `create-ssnode-app` 生成 —— 包名/标题/DB 名/密钥已自动替换注入,「必改清单」第 1、2 类已完成,只剩部署凭证与 lockfile 两项手工步骤。框架层(双轨鉴权、SQLite 加固、docker/systemd/pm2 部署引擎、Capistrano 回滚)开箱即用,业务面已收敛到最小示例。
 
 ---
 
@@ -15,11 +15,11 @@
 
 dev 时 vite proxy 把 `/api`、`/ws`、`/static/uploads` 转给 `localhost:3001`;前端同源请求,`web/public/env.config.js` 的 `requestBaseUrl` 留空。
 
-## 从本模板起新项目 — 必改清单
+## 必改清单(生成项目只做 3、4;1、2、5 已由脚手架完成)
 
-`cp -r fullstack-template <你的项目>` 后,按序改这 5 类:
+若走 `cp -r` 老路手动拷模板,才需要按序改这 5 类:
 
-### 1. 包名 / 标题(身份)
+### 1. 包名 / 标题(身份)— ✅ 已由脚手架完成
 - 根 `package.json`:`name`、`description`
 - `web/package.json`:`name`、`description`(同时影响 `pnpm --filter web` 与 `backend/scripts/build.cjs` 的 `safeName`)
 - `backend/package.json`:`name`、`description`
@@ -27,8 +27,8 @@ dev 时 vite proxy 把 `/api`、`/ws`、`/static/uploads` 转给 `localhost:3001
 - `backend/src/main.ts`:Swagger `.setTitle(...)`
 - 根 `scripts/publish.cjs`、`rollback.cjs`:若改了 web/backend 包名,同步改 `--filter` 名
 
-### 2. 密钥(占位值,务必替换)
-⚠️ 模板所有密钥为占位串 `*-change-me-*`,**前后端必须同款**:
+### 2. 密钥(占位值,务必替换)— ✅ 已由脚手架生成并前后端成对注入
+dev/prod 两套密钥已生成并写入下列位置(超管密码见生成时控制台输出):
 - **大屏签名密钥** `appSign.signKey`(HMAC,前后端逐字一致):
   - `web/.env.development` + `web/.env.production` 的 `VITE_APP_SIGN_KEY`
   - `backend/config/config.develop.yaml` + `config.prod.yaml` 的 `appSign.signKey`
@@ -49,7 +49,7 @@ mkdir -p /tmp/be-lock && cp backend/package.json /tmp/be-lock/ \
 ```
 详见 `backend/scripts/build.cjs::validateLockfile`。
 
-### 5. 业务面(按需替换示例)
+### 5. 业务面(按需替换示例)— 部分由脚手架保留,业务扩展仍手工
 模板带 **1 个端到端示例**:column 栏目模块(后端 module + 签名 screen 端点 + 后台 CRUD + 大屏消费 + mock 兜底)。照它扩自己的业务:
 - 大屏清单/分辨率:`web/config/screen.config.ts`(默认 1 屏 `lanmu` 1920×1080)
 - 路由树/后台菜单:`web/config/router.config.ts`
