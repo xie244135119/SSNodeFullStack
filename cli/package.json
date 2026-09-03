@@ -1,6 +1,6 @@
 {
   "name": "create-ssnode-app",
-  "version": "0.1.3",
+  "version": "0.1.4",
   "description": "SSNodeFullStack 脚手架 — 生成全栈 / 仅前端 / 仅后端项目(Vite+React+AntD / NestJS+SQLite)",
   "type": "module",
   "bin": {
@@ -19,7 +19,7 @@
   "scripts": {
     "prepack": "node build-pack.mjs",
     "postpack": "node build-pack.mjs --clean",
-    "publish": "npm publish --registry=https://registry.npmjs.org"
+    "release": "npm publish --registry=https://registry.npmjs.org"
   },
   "engines": {
     "node": ">=20.11.0"
