@@ -72,4 +72,4 @@ scripts/                根级发布/回滚薄编排
 |---|---|
 | `README.md` | 总览 + 从模板起新项目必改清单(包名/密钥/凭证/lockfile/业务面) |
 | `docs/airtable/DESIGN.md` | 后台 UI 设计系统(色彩/字体/组件规范);后期想换风格可整体删除并替换 `web/src/styles/theme.ts` |
-| `docs/api-security.md` | 双轨鉴权与签名机制(本地文档,不入库) |
+| `docs/api-security.md` | 双轨鉴权与签名机制 |
