@@ -18,8 +18,13 @@ templates/backend/scripts/server.config.cjs
 # sqlite data
 templates/backend/data
 
-# 生成测试产物
+# 生成测试产物(CI/本地跑 CLI 的输出)
 /tmp
+cli/g-*
+
+# npm pack 组装产物(build-pack.mjs prepack 生成、postpack 清理,防意外入库)
+cli/templates/
+cli/*.tgz
 
 # editor/misc
 .DS_Store
