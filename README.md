@@ -9,13 +9,10 @@
 ## 用法(生成新项目)
 
 ```bash
-# 从 npm(包发布后)
+# 从 npm(正式分发渠道,版本 = npm 包版本)
 npm create ssnode-app my-app
 
-# 从 GitHub
-npm create github:xie244135119/SSNodeFullStack my-app
-
-# 本地源仓直接跑
+# 本地源仓直接跑(开发模板时)
 node cli/index.js my-app
 ```
 
