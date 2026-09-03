@@ -6,7 +6,7 @@ import { ScreenList, ScreenHallList } from './screen.config';
 const RouterConfig: RouteConfigItem[] = [
   {
     path: '/',
-    redirect: '/screen/lanmu'
+    redirect: '/directory'
   },
   {
     path: '/directory',

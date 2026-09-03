@@ -37,6 +37,14 @@ jobs:
       - name: Generate ${{ matrix.stack }} project
         run: node cli/index.js /tmp/gen/p-${{ matrix.stack }} --stack ${{ matrix.stack }} --yes
 
+      - name: Assert dotfiles present (.gitignore/.npmrc — npm 包 dotfile 重命名回归)
+        run: |
+          cd /tmp/gen/p-${{ matrix.stack }}
+          for f in .gitignore .npmrc; do
+            [ -f "$f" ] || { echo "✗ 缺 $f"; exit 1; }
+          done
+          echo "✓ dotfile 齐全"
+
       - name: Residual scan (template identity strings must be gone)
         run: |
           cd /tmp/gen/p-${{ matrix.stack }}

@@ -272,10 +272,19 @@ async function main() {
 
   // ── ⑧ 密钥打印(仅控制台,不落盘;密钥本体已在文件里) ──
   if (secretsPrintout) {
-    p.log.info('超管账号(启动时 reconcile 入库,牢记):');
-    console.log(`    dev : admin / ${secretsPrintout.develop.adminPassword}`);
-    console.log(`    prod: admin / ${secretsPrintout.prod.adminPassword}`);
-    p.log.info('签名/JWT 密钥已写入 web/.env.* 与 backend/config/*.yaml(前后端已同值,无需手抄)');
+    if (stack !== 'web') {
+      // 超管账号只对含 backend 的变体有意义(web-only 无后端可 reconcile)
+      p.log.info('超管账号(启动时 reconcile 入库,牢记):');
+      console.log(`    dev : admin / ${secretsPrintout.develop.adminPassword}`);
+      console.log(`    prod: admin / ${secretsPrintout.prod.adminPassword}`);
+    }
+    if (stack === 'fullstack') {
+      p.log.info('签名/JWT 密钥已写入 web/.env.* 与 backend/config/*.yaml(前后端已同值,无需手抄)');
+    } else if (stack === 'backend') {
+      p.log.info('签名/JWT 密钥已写入 config/*.yaml;将来接前端时,把 appSign.signKey 同值填入前端 .env');
+    } else {
+      p.log.info('签名密钥已写入 .env.development / .env.production;将来接后端时,把同值填入后端 yaml 的 appSign.signKey');
+    }
   }
 
   // ── ⑨ pnpm install ──
@@ -354,11 +363,14 @@ function copyDir(src, dest) {
 }
 /** 从 templates/root 拷单文件到生成物根(处理包内 dotfile 重命名) */
 function copyRootFiles(targetDir, files) {
+  // 真名 → 打包名(npm 包布局下 .gitignore/.npmrc 被 build-pack 重命名)
+  const REAL_TO_PACKED = { '.gitignore': '_gitignore', '.npmrc': '_npmrc' };
   for (const f of files) {
-    // 源仓布局直接命中;npm 包布局下 .gitignore/.npmrc 是 _gitignore/_npmrc
-    const packed = DOTFILE_RESTORE[f] ? (existsSync(join(TEMPLATES_DIR, 'root', f)) ? f : DOTFILE_RESTORE[f]) : f;
-    const src = join(TEMPLATES_DIR, 'root', packed);
-    if (existsSync(src)) cpSync(src, join(targetDir, f));
+    const direct = join(TEMPLATES_DIR, 'root', f);                  // 源仓布局:真名
+    const packed = REAL_TO_PACKED[f] ? join(TEMPLATES_DIR, 'root', REAL_TO_PACKED[f]) : null; // 包布局:打包名
+    const src = existsSync(direct) ? direct : (packed && existsSync(packed) ? packed : null);
+    if (src) cpSync(src, join(targetDir, f));
+    else if (REAL_TO_PACKED[f]) throw new Error(`根模板缺文件:${f}(源仓/包布局均未找到)`);
   }
 }
 /** docs/(设计规范、API 安全)拷进生成项目;源仓在 repo 根,npm 包内随包分发于 templates/docs */
