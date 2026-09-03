@@ -24,6 +24,56 @@ npm create ssnode-app my-app -- --stack fullstack --yes       # 非交互(CI 可
 
 要求:Node ≥ 20.11(生成后用 pnpm 装依赖)。
 
+## 交互示例
+
+```text
+$ npm create ssnode-app my-app
+
+┌  create-ssnode-app · SSNodeFullStack 脚手架
+│
+◆  项目目录(相对路径,如 my-app):
+│  my-app
+│
+◆  生成什么项目?
+│  ● 全栈
+│    web + backend monorepo(大屏 + 后台 + NestJS)
+│  ○ 仅前端 web
+│    Vite + React + AntD,大屏走 mock 兜底
+│  ○ 仅后端 backend
+│    NestJS + SQLite,管理走 Swagger
+│
+◆  项目展示名(后台顶栏/Swagger/登录页标题):
+│  我的应用
+│
+◆  git init + 首次 commit?
+│  ● Yes / ○ No
+│
+◇  组装模板 → 身份替换 → 密钥注入 → git 仓库已建立 → 生成完成
+│
+◇  项目已生成:/Users/you/my-app
+│
+●  超管账号(启动时 reconcile 入库,牢记):
+│      dev : admin / xK9mP2qR8vTz4wL6
+│      prod: admin / hF3nJ7cW5bYs2dQe
+│
+●  签名/JWT 密钥已写入 web/.env.* 与 backend/config/*.yaml(前后端已同值,无需手抄)
+│
+◆  现在执行 pnpm install?
+│  ● Yes / ○ No
+│
+◇  接下来(脚手架搞不定的部分) ──────────────────────────────
+│
+│    cd my-app
+│    pnpm install
+│    pnpm dev          # web(6177)+ backend(3001)
+│    → 部署前:配 SSH 凭证 web/scripts/server.config.json + backend/scripts/server.config.cjs(从 example 拷)
+│    → 首次部署前:backend/ 下重生 package-lock.json(见 README「第 4 步」)
+│
+└  Happy hacking!
+```
+
+(超管密码每次随机生成;选 web 变体时无超管账号输出,改提示接后端时如何填签名密钥)
+
 ## 脚手架替你做了什么
 
 生成过程自动完成,不需要手工改任何模板占位:
