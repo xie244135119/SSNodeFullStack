@@ -41,8 +41,8 @@ scripts/                根级发布/回滚薄编排
 
 ## 硬约束(违反 = 线上直接坏,改前自查)
 
-1. **迁移显式注册**:`sqlite.config.ts` 的 `migrations` 数组用显式 import(glob 在单文件 bundle 下落空 → prod 不建表)。新增迁移文件后**必须**手动加进数组。
-2. **webpack 必须 `mode:'none'`**:production mode 会把 `process.env.NODE_ENV` 写死成 `"production"`,而应用按 `'prod'`/`'develop'` 选 yaml → 回退 develop、isProd 恒 false。
+1. **迁移显式注册**:`sqlite.config.ts` 的 `migrations` 数组用显式 import(新增迁移文件后手动加进数组;虽 tsc 产物下 glob 也能用,但显式注册是既定约定,保持)。
+2. **构建管线 = nest build(tsc)+ terser**:`scripts/build.cjs` 两步;tsc 无 NODE_ENV 陷阱(那是 webpack DefinePlugin 的问题,已随 webpack 移除);**terser 的 `mangle.keep_fnames` 必须开**(混淆类名会废 Swagger `/docs`);运维包 dist 剥离 `.js.map`/`.d.ts`(泄露面)。
 3. **签名密钥前后端逐字一致**:`web/.env.development|production` 的 `VITE_APP_SIGN_KEY` ↔ `backend/config/*.yaml` 的 `appSign.signKey`(HMAC,大屏鉴权全靠它)。
 4. **hall 枚举两处镜像**:`web/src/config/column-hall.config.ts` ↔ `backend/src/modules/column/column-hall.ts`,改一处必须同步另一处。
 5. **prod 建表只靠迁移**:`synchronize:false`;develop 是 `synchronize:true` 本地免迁移,别被它骗了。

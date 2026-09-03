@@ -27,7 +27,7 @@
 1. **改模板 = 改脚手架**:templates/ 下任何身份串变更(fullstack-template、template.*.sqlite、<模板项目>、__PKG_NAME__ 等)必须同步 `cli/transforms.js` 替换表,否则生成物残留模板身份。改完跑一次非交互生成 + 残留 grep 验证。
 2. **密钥占位**:模板里密钥一律空值锚点(`VITE_APP_SIGN_KEY=`、`field: ''`),`cli/secrets.js` 按锚点注入;改 yaml 字段名会破坏注入,需同步 secrets.js。
 3. **`--filter` 派生名**:生成项目子包名是 `<name>-web`/`<name>-backend`(index.js ⑤b 结构化改写),编排脚本与文档里的 `--filter web|backend` 由 transforms 全局规则替换;新增引用子包名的地方要进替换表。
-4. **webpack 必须 `mode:'none'`**(模板硬约束,原因见 templates/backend/webpack.pack.cjs 注释)。
+4. **backend 构建管线 = nest build(tsc)+ terser**:tsc 做类型检查,terser 混淆部署产物(`keep_fnames` 保 Swagger 类名;运维包剥离 `.js.map`/`.d.ts`)。别往 build.cjs 里引回 webpack。
 5. **迁移显式注册**:模板 backend 的 migrations 数组用显式 import;新增迁移模板文件必须同步注册。
 6. **hall 枚举两处镜像**:`templates/web/src/config/column-hall.config.ts` ↔ `templates/backend/src/modules/column/column-hall.ts`。
 7. **web 模板是 JS 不是 TS**;两包间不建 `workspace:*` 依赖。

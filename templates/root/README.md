@@ -83,10 +83,11 @@ mkdir -p /tmp/be-lock && cp backend/package.json /tmp/be-lock/ \
 仅作用于 `/background` 后台路由树;大屏端不套此主题。入口:`web/src/styles/theme.ts`(`airtableTheme`)→ `Background.tsx` 的 `<ConfigProvider>`。
 UI 规范见 `docs/airtable/DESIGN.md`;后期想换自己的风格:替换/修改 `theme.ts` 的 token 即可,该规范文档可删。
 
-### backend 构建(单文件 bundle)
-- `pnpm --filter backend build` = webpack 单文件打包 `src/main.ts` → `dist/main.js`,自动 bump version。
+### backend 构建(tsc + terser 混淆)
+- `pnpm --filter backend build` = 两步管线:`nest build`(tsc,含全量类型检查)→ dist/ 目录树(入口仍 `dist/main.js`)→ `terser` 逐文件 compress + mangle(变量名混淆,部署产物防看),自动 bump version。
 - `pnpm --filter backend buildops` = build 之后组装运维包到 `backend/release/`。
-- **关键 gotcha**:webpack 必须 `mode:'none'`(非 production)。production mode 会把 `process.env.NODE_ENV` 替换成 `"production"`,而本应用按 `'prod'`/`'develop'` 选 yaml → 回退 develop、isProd 恒 false。
+- **混淆边界**:`mangle.keep_fnames` 必须开——Swagger 的 operationId/schema 名从类名读,混淆类名会废掉 `/docs`;Nest DI 走构造函数引用不受影响。属性名不 mangle(保 yaml/DTO/装饰器元数据)。
+- **泄露面**:运维包/镜像内的 dist 剥离 `.js.map` 与 `.d.ts`(源码映射与接口结构不外发);`.js.map` 仅本地排障用(terser 已链到源 ts 的映射,`node --enable-source-maps` 可栈回源)。
 - **关键 gotcha**:`backend/package-lock.json` 必须是真 npm lockfile(见上方第 4 步)。
 - **关键 gotcha**:better-sqlite3 v13 不发布预编译二进制,需 python3/make/g++ 源码编译;`node:22-slim` Dockerfile 已 `apt-get install python3 make g++`。
 

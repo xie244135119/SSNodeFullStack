@@ -1,12 +1,18 @@
 /**
- * backend 构建脚本（webpack 单文件 + 自动 version）。
+ * backend 构建脚本（nest build (tsc) + terser 混淆 + 自动 version）。
+ *
+ * 构建 = 两步管线:
+ *   1) nest build:tsc 全量类型检查 → dist/ 目录树(入口仍 dist/main.js,ops/Docker 全链零改动);
+ *      无 webpack 的 NODE_ENV DefinePlugin 陷阱,migrations 目录真实存在(glob 可用,显式 import 保留)。
+ *   2) terser:逐文件 compress + mangle(keep_fnames 保 Swagger 类名)——部署产物防看;
+ *      .js.map 本地保留供排障,buildOps 打运维包时剥离。
  *
  * 用法:
- *   pnpm build                 # = build 子命令:webpack 单文件打包到 dist/main.js + 自动 bump version
+ *   pnpm build                 # = build 子命令:构建 + 混淆 + 自动 bump version
  *   pnpm buildops              # = buildops 子命令:build 之后,组装运维包到 release/<name>-<时间戳>/
  *   pnpm build -- --version 2.0.0   # 跳转更新 version(显式指定,不做默认 bump)
  *   pnpm build -- --no-bump        # 不动 version(仅打包,迭代调试用)
- *   pnpm buildops -- --skip-build  # buildops 不重跑 webpack,用现有 dist(仅重组装包)
+ *   pnpm buildops -- --skip-build  # buildops 不重跑构建,用现有 dist(仅重组装包)
  *
  * version 规则(优先级从高到低):
  *   - --version <v>:跳转到指定值(原样写入)。
@@ -17,7 +23,7 @@
  * buildops 产物(backend/release/<name>-<时间戳>/):
  *   ├── install.sh start.sh stop.sh versionswitch.sh status.sh  (顶层薄封装,从 ops/ 提到包根)
  *   ├── ops/        (mode dispatch:docker/pm2/systemd/sqlite + 运维文档.html;顶层脚本不重复进 ops/)
- *   └── releases/<version>-<ts>/   (打完的包内容:dist/main.js + package.json + package-lock.json + Dockerfile + .dockerignore + docker-compose.yml + config/config.prod.yaml + .build-ts;子目录带 ts,同 version 多次打包不冲突)
+ *   └── releases/<version>-<ts>/   (打完的包内容:dist/ + package.json + package-lock.json + Dockerfile + .dockerignore + docker-compose.yml + config/config.prod.yaml + .build-ts;子目录带 ts,同 version 多次打包不冲突)
  *
  * 产物目录名 = <name>-<时间戳>(仅本地产物目录命名,不替代 version);version 仍用于内层
  * releases/<version>-<ts>/ 子目录与 docker 镜像 tag。publish.cjs 经 release/.last-build manifest 定位产物。
@@ -27,12 +33,10 @@
 const fs = require('fs');
 const path = require('path');
 const readline = require('readline');
-const webpack = require('webpack');
 
 const BACKEND = path.resolve(__dirname, '..');
 const PKG_PATH = path.join(BACKEND, 'package.json');
 const RELEASE_DIR = path.join(BACKEND, 'release');
-const webpackConfig = require(path.join(BACKEND, 'webpack.pack.cjs'));
 
 // ---------- argv ----------
 const argv = process.argv.slice(2);
@@ -181,20 +185,62 @@ async function bumpVersion() {
   return { old: oldV, new: newV };
 }
 
-// webpack 单文件打包 → dist/main.js
-function runWebpack() {
-  console.log('📦 webpack 单文件打包 (src/main.ts → dist/main.js) ...');
-  return new Promise((resolve, reject) => {
-    webpack(webpackConfig, (err, stats) => {
-      if (err) return reject(err);
-      if (stats.hasErrors()) {
-        return reject(new Error(stats.toString({ colors: false, errors: true, warnings: false })));
-      }
-      const out = path.join(BACKEND, 'dist', 'main.js');
-      console.log(`  ✓ dist/main.js  (${fmtSize(fs.statSync(out).size)})`);
-      resolve();
-    });
+// nest build (tsc) → dist/ 目录树(入口仍 dist/main.js,与 webpack 时代兼容)
+function runNestBuild() {
+  console.log('📦 nest build (tsc,含类型检查) src/ → dist/ ...');
+  const r = require('child_process').spawnSync('npx', ['nest', 'build'], {
+    cwd: BACKEND,
+    stdio: 'inherit',
+    shell: true
   });
+  if (r.status !== 0) throw new Error('nest build 失败(退出码 ' + r.status + ')');
+  const out = path.join(BACKEND, 'dist', 'main.js');
+  if (!fs.existsSync(out)) throw new Error('nest build 未产出 dist/main.js');
+  console.log(`  ✓ dist/main.js  (${fmtSize(fs.statSync(out).size)})`);
+}
+
+// terser 混淆:遍历 dist/**/*.js 逐文件压缩+变量名混淆。
+//   - mangle.keep_fnames 必须开:Swagger schema 名从 DTO 类名读,混淆类名会把 /api/docs
+//     的 $ref 变 a/b/c;Nest DI 走构造函数引用不受影响。
+//   - 属性名不 mangle(terser 默认),保 yaml 配置读取/装饰器元数据/DTO 映射。
+//   - .js.map 原地更新(terser 链原 tsc map → 可栈回源码),仅本地排障用;
+//     buildOps 打运维包时剥离,不上服务器。
+async function runTerser() {
+  const { minify } = require('terser');
+  const distDir = path.join(BACKEND, 'dist');
+  const files = [];
+  (function walk(d) {
+    for (const e of fs.readdirSync(d, { withFileTypes: true })) {
+      const f = path.join(d, e.name);
+      if (e.isDirectory()) walk(f);
+      else if (e.name.endsWith('.js')) files.push(f);
+    }
+  })(distDir);
+  let before = 0;
+  let after = 0;
+  for (const file of files) {
+    const rel = path.relative(distDir, file);
+    const code = fs.readFileSync(file, 'utf8');
+    before += code.length;
+    const mapPath = file + '.map';
+    const opts = {
+      compress: { passes: 2 },
+      mangle: { keep_fnames: true },
+      format: { comments: false }
+    };
+    if (fs.existsSync(mapPath)) {
+      opts.sourceMap = {
+        content: JSON.parse(fs.readFileSync(mapPath, 'utf8')),
+        filename: rel,
+        url: path.basename(file) + '.map'
+      };
+    }
+    const result = await minify({ [rel]: code }, opts);
+    fs.writeFileSync(file, result.code);
+    if (result.map) fs.writeFileSync(mapPath, JSON.stringify(result.map));
+    after += result.code.length;
+  }
+  console.log(`  ✓ terser 混淆 ${files.length} 个文件  (${fmtSize(before)} → ${fmtSize(after)})`);
 }
 
 // 清理 macOS AppleDouble(`._*`)与 `.DS_Store` 垃圾文件。
@@ -262,7 +308,12 @@ function buildOps(version) {
   //    (子目录名带时间戳:同一 version 可能多次打包,加 ts 避免覆盖/混淆)
   const appDir = path.join(outDir, 'releases', `${version}-${ts}`);
   fs.mkdirSync(appDir, { recursive: true });
-  fs.cpSync(path.join(BACKEND, 'dist'), path.join(appDir, 'dist'), { recursive: true });
+  // dist 拷贝剥离 .js.map(源码映射,混淆即失效)与 .d.ts(接口结构)——部署产物只留混淆后的 .js。
+  // map 仅本地排障用(terser 已链接到源 ts 的映射链)。
+  fs.cpSync(path.join(BACKEND, 'dist'), path.join(appDir, 'dist'), {
+    recursive: true,
+    filter: (src) => !src.endsWith('.js.map') && !src.endsWith('.d.ts')
+  });
   fs.copyFileSync(PKG_PATH, path.join(appDir, 'package.json'));
   // package-lock.json 供 Dockerfile npm ci(可复现依赖);bump 时已 sync version 字段。
   const lockSrc = path.join(BACKEND, 'package-lock.json');
@@ -326,14 +377,15 @@ function buildOps(version) {
 async function main() {
   const { new: version } = await bumpVersion();
   if (!skipBuild) {
-    await runWebpack();
+    await runNestBuild();
+    await runTerser();
   } else {
     const out = path.join(BACKEND, 'dist', 'main.js');
     if (!fs.existsSync(out)) {
       console.error(`✗ --skip-build 但 dist/main.js 不存在: ${out}`);
       process.exit(1);
     }
-    console.log(`⏭  跳过 webpack,沿用 dist/main.js  (${fmtSize(fs.statSync(out).size)})`);
+    console.log(`⏭  跳过构建,沿用 dist/main.js  (${fmtSize(fs.statSync(out).size)})`);
   }
 
   if (sub === 'buildops') {
