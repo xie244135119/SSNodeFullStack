@@ -50,10 +50,11 @@ mkdir -p /tmp/be-lock && cp backend/package.json /tmp/be-lock/ \
 详见 `backend/scripts/build.cjs::validateLockfile`。
 
 ### 5. 业务面(按需替换示例)— 部分由脚手架保留,业务扩展仍手工
-模板带 **1 个端到端示例**:column 栏目模块(后端 module + 签名 screen 端点 + 后台 CRUD + 大屏消费 + mock 兜底)。照它扩自己的业务:
-- 大屏清单/分辨率:`web/config/screen.config.ts`(默认 1 屏 `lanmu` 1920×1080)
+模板带 **2 个后台 CRUD 示例**(后端模块 + 前端页面,照着扩自己的业务):
+- **页面管理**:`page_data` 表的增删改查(`backend/src/modules/page-data/` + `web/src/pages/Backend/PageData/`)
+- **图片管理**:上传 + 预览 + 改名 + 删除,删除同步删物理文件(`backend/src/modules/image/` + `web/src/pages/Backend/Image/`)
+- 大屏清单/分辨率:`web/config/screen.config.ts`(模板不带示例大屏,新增条目路由自动展开)
 - 路由树/后台菜单:`web/config/router.config.ts`
-- 分组枚举(前后端镜像,改要两处同步):`web/src/config/column-hall.config.ts` + `backend/src/modules/column/column-hall.ts`
 - 新增后端模块:`backend/src/modules/<x>/` + `entities/` + 迁移 + `app.module.ts` 注册
 - 新增大屏受保护接口:controller 路由加 `@UseGuards(AppSignGuard)`
 
@@ -117,7 +118,7 @@ UI 规范见 `docs/airtable/DESIGN.md`;后期想换自己的风格:替换/修改
 | backend 部署力学(shell) | `backend/ops/install.sh` + `ops/<mode>/*.sh` |
 | 数据库迁移 / 建表 | `backend/src/database/migrations/`、`scripts/data-source.ts` |
 | 运维监控探针 | `backend/src/modules/ops/` |
-| 示例业务模块(参照) | `backend/src/modules/column/` + `web/src/pages/{ScreenLanMu,Backend/Column}/` |
+| 示例业务模块(参照) | `backend/src/modules/{page-data,image}/` + `web/src/pages/Backend/{PageData,Image}/` |
 
 ## 范围边界
 - **不建 `packages/shared`**:前后端各自声明类型(如 hall 枚举两处镜像),不引 `workspace:*`。

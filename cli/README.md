@@ -6,7 +6,7 @@ SSNodeFullStack 脚手架 —— 一条命令生成全栈 / 仅前端 / 仅后�
 npm create ssnode-app my-app
 ```
 
-交互问答(目录 → 技术栈 → 展示名 → git init → install)后,生成一个可直接 `pnpm install && pnpm dev` 跑起来的项目,业务面自带一个端到端示例模块(column 栏目:后端 API + 签名大屏端点 + 后台 CRUD + mock 兜底),照着扩自己的业务。
+交互问答(目录 → 技术栈 → 展示名 → git init → install)后,生成一个可直接 `pnpm install && pnpm dev` 跑起来的项目,业务面自带两个后台 CRUD 示例(页面管理 / 图片管理:后端模块 + 前端页面),照着扩自己的业务。
 
 ## 用法
 
@@ -38,7 +38,7 @@ $ npm create ssnode-app my-app
 │  ● 全栈
 │    web + backend monorepo(大屏 + 后台 + NestJS)
 │  ○ 仅前端 web
-│    Vite + React + AntD,大屏走 mock 兜底
+│    Vite + React + AntD,checkToken=false 免登录
 │  ○ 仅后端 backend
 │    NestJS + SQLite,管理走 Swagger
 │

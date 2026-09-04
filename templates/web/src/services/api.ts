@@ -3,14 +3,14 @@
  *
  * 业务接口按鉴权方式拆分:
  *  - admin/  : 后台管理接口,走 JWT(request 实例,Authorization 头)
- *  - screen/ : 大屏消费接口,走前端 HMAC 签名(appRequest 实例,无 token,协议见 docs/api-security.md)
+ * 大屏消费接口走前端 HMAC 签名(appRequest 实例,无 token,协议见 docs/api-security.md),
+ * 新增大屏接口时在 services/api/ 下建 screen/ 目录,在 app-request.ts 之上封装。
  * 通用工具(common / mysql)与请求基础设施(request / app-request)留在 services 根目录,不归入两者。
  */
 import { message } from 'antd';
 import request, { webrequest } from './request';
-// 业务接口:后台(JWT)/ 大屏(前端签名)
+// 业务接口:后台(JWT)
 import admin from './api/admin';
-import screen from './api/screen';
 // 通用工具(与鉴权无关)
 import * as common from './api/common';
 import * as mysql from './api/mysql';
@@ -56,8 +56,6 @@ updateRequestToken(admin.user.getAuthorization());
 export default {
   // 后台管理接口(JWT)
   admin,
-  // 大屏消费接口(前端 HMAC 签名)
-  screen,
   // 通用工具(与鉴权无关)
   common,
   // 本地配置数据(xlsx)

@@ -2,9 +2,6 @@ import { ConfigService } from '@nestjs/config';
 import type { AppConfig } from '../config/config.interface';
 import * as path from 'path';
 import { Init1740000000000 } from './migrations/0001-init.migration';
-import { AddColumn1740000000001 } from './migrations/0002-add-column-tables.migration';
-import { AddColumnResolution1740000000002 } from './migrations/0003-add-column-resolution.migration';
-import { AddAuditLog1740000000003 } from './migrations/0004-add-audit-log.migration';
 
 /**
  * 应用 PRAGMA：在驱动 createDatabaseConnection 后、连接被业务用之前调用。
@@ -66,7 +63,7 @@ export const buildTypeOrmOptions = (
     entities: [path.join(__dirname, '..', 'entities', '*.{ts,js}')],
     // 迁移显式引用(非文件 glob):单文件 webpack bundle 下无磁盘迁移文件,glob 落空
     // 会让 prod migrationsRun 找不到迁移、不建表;显式 import 让迁移随 bundle 走,tsc 布局同样适用。
-    migrations: [Init1740000000000, AddColumn1740000000001, AddColumnResolution1740000000002, AddAuditLog1740000000003],
+    migrations: [Init1740000000000],
     // prod 启动自动跑迁移（幂等）；develop 靠 synchronize，不自动跑迁移
     migrationsRun: isProd,
     // SQLite 持久化加固

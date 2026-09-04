@@ -1,6 +1,6 @@
 import path from 'path-browserify';
 import React from 'react';
-import { UserOutlined, FileTextOutlined } from '@ant-design/icons';
+import { UserOutlined, FileTextOutlined, PictureOutlined } from '@ant-design/icons';
 import { ScreenList, ScreenHallList } from './screen.config';
 
 const RouterConfig: RouteConfigItem[] = [
@@ -33,11 +33,9 @@ const RouterConfig: RouteConfigItem[] = [
         path: '/screen',
         component: './layouts/Screen',
         children: [
-          {
-            path: '/',
-            redirect: './lanmu'
-          },
-          // 大屏页面路由按分组维度展开（分辨率基准由 meta 携带，Screen 布局按需读取）
+          // 大屏页面路由按分组维度展开（分辨率基准由 meta 携带，Screen 布局按需读取）。
+          // 模板不带示例大屏:在 config/screen.config.ts 的 ScreenList/ScreenHallList
+          // 里追加条目 + 建 pages/ 下对应页面组件后,此处自动展开生效。
           ...ScreenHallList.map((hall) => ({
             name: hall.name,
             children: ScreenList.filter((item) => item.hall === hall.key).map((item) => ({
@@ -69,13 +67,19 @@ const RouterConfig: RouteConfigItem[] = [
             children: [
               {
                 path: '/',
-                redirect: '/column'
+                redirect: '/page-data'
               },
               {
-                path: './column',
-                name: '栏目管理',
+                path: './page-data',
+                name: '页面管理',
                 icon: React.createElement(FileTextOutlined),
-                component: './pages/Backend/Column/index'
+                component: './pages/Backend/PageData/index'
+              },
+              {
+                path: './image',
+                name: '图片管理',
+                icon: React.createElement(PictureOutlined),
+                component: './pages/Backend/Image/index'
               },
               {
                 name: '运维管理',

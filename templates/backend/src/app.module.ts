@@ -9,8 +9,7 @@ import { buildTypeOrmOptions } from './database/sqlite.config';
 import { ScreenConfigEntity } from './entities/screen-config.entity';
 import { PageDataEntity } from './entities/page-data.entity';
 import { UserEntity } from './entities/user.entity';
-import { ColumnItemEntity } from './entities/column-item.entity';
-import { ColumnImageEntity } from './entities/column-image.entity';
+import { ImageEntity } from './entities/image.entity';
 
 import { AllExceptionsFilter } from './common/all-exceptions.filter';
 import { TransformInterceptor } from './common/transform.interceptor';
@@ -23,7 +22,7 @@ import { ScreenConfigModule } from './modules/screen-config/screen-config.module
 import { PageDataModule } from './modules/page-data/page-data.module';
 import { WebsocketModule } from './modules/websocket/websocket.module';
 import { UploadModule } from './modules/upload/upload.module';
-import { ColumnModule } from './modules/column/column.module';
+import { ImageModule } from './modules/image/image.module';
 import { AuditModule } from './modules/audit/audit.module';
 import { OpsModule } from './modules/ops/ops.module';
 
@@ -55,8 +54,7 @@ import { OpsModule } from './modules/ops/ops.module';
       ScreenConfigEntity,
       PageDataEntity,
       UserEntity,
-      ColumnItemEntity,
-      ColumnImageEntity
+      ImageEntity
     ]),
     AuthModule,
     UserModule,
@@ -64,7 +62,7 @@ import { OpsModule } from './modules/ops/ops.module';
     PageDataModule,
     WebsocketModule,
     UploadModule,
-    ColumnModule,
+    ImageModule,
     AuditModule,
     OpsModule,
     // 大屏 API 签名(供 /screen 接口 @UseGuards(AppSignGuard))

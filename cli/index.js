@@ -4,7 +4,7 @@
  *
  * 从本仓库(脚手架源仓)的 templates/ 生成新项目,三种变体:
  *   fullstack  web + backend + 根胶水(monorepo,同模板仓库现状)
- *   web        仅前端(单包工程,checkToken=false 走 mock 兜底,后端就绪后再开)
+ *   web        仅前端(单包工程,checkToken=false 免登录,后端就绪后再开)
  *   backend    仅后端(单包工程,管理走 Swagger)
  *
  * 流程:prompts 问答 → 拷贝模板 → transforms 身份替换 → secrets 密钥注入
@@ -82,7 +82,7 @@ const HELP_TEXT = `create-ssnode-app — SSNodeFullStack 脚手架
 选项:
   --stack <fullstack|web|backend>  技术栈;指定后进入非交互模式(CI 可用)
                                    fullstack = web + backend monorepo
-                                   web       = 仅前端(checkToken=false,mock 兜底)
+                                   web       = 仅前端(checkToken=false 免登录)
                                    backend   = 仅后端(管理走 Swagger /docs)
   --yes                            非交互模式下跳过 git init / pnpm install 询问
   -v, --version                    显示版本
@@ -138,7 +138,7 @@ async function main() {
       message: '生成什么项目?',
       options: [
         { value: 'fullstack', label: '全栈', hint: 'web + backend monorepo(大屏 + 后台 + NestJS)' },
-        { value: 'web', label: '仅前端 web', hint: 'Vite + React + AntD,大屏走 mock 兜底' },
+        { value: 'web', label: '仅前端 web', hint: 'Vite + React + AntD,checkToken=false 免登录' },
         { value: 'backend', label: '仅后端 backend', hint: 'NestJS + SQLite,管理走 Swagger' },
       ],
     });
@@ -180,7 +180,7 @@ async function main() {
     copyDir(join(TEMPLATES_DIR, 'web'), targetDir);
     // 根胶水里 web 单包也需要的:.gitignore(内容含 dist 等)、prettier
     copyRootFiles(targetDir, ['.gitignore', '.npmrc', '.prettierignore', '.prettierrc.cjs', 'LICENSE']);
-    // web-only 免登录:没后端就没法登录,checkToken 关掉走 mock
+    // web-only 免登录:没后端就没法登录,checkToken 关掉
     const envConfig = readFileSync(join(targetDir, 'public', 'env.config.js'), 'utf-8');
     writeFileSync(join(targetDir, 'public', 'env.config.js'), envConfig.replace('checkToken: true', 'checkToken: false'));
     // 单包变体不拷 AGENTS/CLAUDE(全栈工作指南,单包下大量失效),生成精简版
@@ -320,9 +320,10 @@ async function main() {
   if (secretsPrintout) {
     if (stack !== 'web') {
       // 超管账号只对含 backend 的变体有意义(web-only 无后端可 reconcile)
+      const cfgPath = (f) => (stack === 'fullstack' ? `backend/config/${f}` : `config/${f}`);
       p.log.info('超管账号(启动时 reconcile 入库,牢记):');
-      console.log(`    dev : admin / ${secretsPrintout.develop.adminPassword}`);
-      console.log(`    prod: admin / ${secretsPrintout.prod.adminPassword}`);
+      console.log(`    dev : admin / ${secretsPrintout.develop.adminPassword}   ← 改密:${cfgPath('config.develop.yaml')} 的 admin.password + 重启`);
+      console.log(`    prod: admin / ${secretsPrintout.prod.adminPassword}   ← 改密:${cfgPath('config.prod.yaml')} 的 admin.password + 重启(docker 用 .env 的 ADMIN_PASSWORD)`);
     }
     if (stack === 'fullstack') {
       p.log.info('签名/JWT 密钥已写入 web/.env.* 与 backend/config/*.yaml(前后端已同值,无需手抄)');
@@ -355,7 +356,7 @@ function nextSteps(stack, targetDir, installed) {
     lines.push('→ 部署前:配 SSH 凭证 web/scripts/server.config.json + backend/scripts/server.config.cjs(从 example 拷)');
     lines.push('→ 首次部署前:backend/ 下重生 package-lock.json(见 README「第 4 步」)');
   } else if (stack === 'web') {
-    lines.push('pnpm dev          # 端口 6177;checkToken=false,大屏走 mock 兜底');
+    lines.push('pnpm dev          # 端口 6177;checkToken=false 免登录');
     lines.push('→ 接后端时:public/env.config.js 的 checkToken 改回 true,并填 .env.* 签名密钥');
   } else {
     lines.push('pnpm dev          # 端口 3001;管理走 /api/docs Swagger');
@@ -377,7 +378,7 @@ function singleStackAgents(stack) {
 ${common}
 ## 本变体要点(web-only)
 
-- **免登录模式**:public/env.config.js 的 checkToken=false(无后端,AuthLayout 直接放行);大屏数据走 src/services/mock.ts 兜底。
+- **免登录模式**:public/env.config.js 的 checkToken=false(无后端,AuthLayout 直接放行)。
 - **接后端时**:checkToken 改回 true + .env.development/.env.production 填 VITE_APP_SIGN_KEY(与后端 yaml appSign.signKey 逐字一致)+ vite.config.js proxy 指向后端。
 - **纯 JS 工程**:jsconfig,不写 TS;eslint airbnb;prettier 单引号/100 宽。
 - \`pnpm dev\` 端口 6177;\`pnpm build\` 产物 dist/;\`pnpm lint\` 带 --fix。
@@ -388,9 +389,9 @@ ${common}
 ${common}
 ## 本变体要点(backend-only)
 
-- **管理走 Swagger**:dev 起动后 /api/docs;超管账号见 config.*.yaml 的 admin(password 已由脚手架生成,启动 reconcile 入库)。
-- **迁移显式注册**:新增迁移必须手动加进 src/database/sqlite.config.ts 的 migrations 数组(glob 在单文件 bundle 下落空 → prod 不建表)。
-- **webpack 必须 mode:'none'**;better-sqlite3 v13 需 python3/make/g++ 源码编译。
+- **管理走 Swagger**:dev 起动后 /docs(Swagger 挂根路径,不带 /api 前缀);超管账号见 config.*.yaml 的 admin(password 已由脚手架生成,启动 reconcile 入库)。
+- **迁移显式注册**:新增迁移必须手动加进 src/database/sqlite.config.ts 的 migrations 数组(既定约定,漏注册 prod 不建表)。
+- **构建** = nest build(tsc)+ terser 混淆;better-sqlite3 v13 需 python3/make/g++ 源码编译。
 - **DB 文件名程序定死**:<name>.prod.sqlite / <name>.dev.sqlite(已随生成物改名,四处同步见 sqlite.config.ts)。
 - \`pnpm dev\` 端口 3001;\`pnpm build\` = webpack 单文件 dist/main.js。
 `;

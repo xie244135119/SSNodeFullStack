@@ -10,7 +10,7 @@
 - **web/** — Vite + React18 + AntD5 + Recoil + Echarts,**纯 JS(jsconfig,非 TS)**,dev 端口 6177。双端界面:只读可视化大屏 + 后台管理系统。
 - **backend/** — NestJS + SQLite(better-sqlite3)+ TypeORM + yaml 多环境,TS,dev 端口 3001,全局前缀 `/api`。
 
-业务主线:**后台配置 → SQLite → 大屏消费**。自带唯一端到端示例业务:column 栏目模块(`backend/src/modules/column/` + `web/src/pages/{ScreenLanMu,Backend/Column}/`),照它扩新业务。
+业务主线:**后台配置 → SQLite → 大屏消费**。自带两个后台 CRUD 示例业务:页面管理(`backend/src/modules/page-data/` + `web/src/pages/Backend/PageData/`)与图片管理(`backend/src/modules/image/` + `web/src/pages/Backend/Image/`),照着扩新业务。
 
 ## 常用命令(仓库根执行)
 
@@ -28,10 +28,10 @@ dev 下 vite proxy 把 `/api`、`/ws`、`/static/uploads` 转给 `127.0.0.1:3001
 
 ```
 web/config/             入口配置:router.config.ts(路由树/后台菜单)、screen.config.ts(大屏清单/分辨率)、project.config.ts(标题/品牌)
-web/src/services/       api.ts(接口清单+契约拦截)、request.ts(后台 JWT 实例)、app-request.ts(大屏签名实例,二者禁止复用)
+web/src/services/       api.ts(接口清单+契约拦截)、request.ts(后台 JWT 实例)、app-request.ts(大屏签名实例,二者禁止复用;大屏接口目录 screen/ 按需自建)
 web/src/styles/         theme.ts(Airtable 风格后台主题 token)
 backend/src/common/     guard / filter / interceptor(响应包装、双轨鉴权)
-backend/src/modules/    业务模块:auth、user、column(示例)、ops、audit、upload、page-data、screen-config、websocket
+backend/src/modules/    业务模块:auth、user、audit、ops、upload、websocket、page-data(示例)、screen-config、image(示例)
 backend/src/entities/   TypeORM 实体
 backend/src/database/   migrations/ + sqlite.config.ts(显式 import 注册)
 backend/config/         config.develop.yaml / config.prod.yaml
@@ -44,7 +44,7 @@ scripts/                根级发布/回滚薄编排
 1. **迁移显式注册**:`sqlite.config.ts` 的 `migrations` 数组用显式 import(新增迁移文件后手动加进数组;虽 tsc 产物下 glob 也能用,但显式注册是既定约定,保持)。
 2. **构建管线 = nest build(tsc)+ terser**:`scripts/build.cjs` 两步;tsc 无 NODE_ENV 陷阱(那是 webpack DefinePlugin 的问题,已随 webpack 移除);**terser 的 `mangle.keep_fnames` 必须开**(混淆类名会废 Swagger `/docs`);运维包 dist 剥离 `.js.map`/`.d.ts`(泄露面)。
 3. **签名密钥前后端逐字一致**:`web/.env.development|production` 的 `VITE_APP_SIGN_KEY` ↔ `backend/config/*.yaml` 的 `appSign.signKey`(HMAC,大屏鉴权全靠它)。
-4. **hall 枚举两处镜像**:`web/src/config/column-hall.config.ts` ↔ `backend/src/modules/column/column-hall.ts`,改一处必须同步另一处。
+4. **hall 枚举若引入则前后端镜像**:模板已移除 column 示例;若业务重新引入「前后端镜像的枚举」(如分组),声明两处并同步改。
 5. **prod 建表只靠迁移**:`synchronize:false`;develop 是 `synchronize:true` 本地免迁移,别被它骗了。
 6. **web 不引 TS**:web 是 jsconfig 工程,后端才是 TS;类型前后端各自声明,不建 `packages/shared`,不用 `workspace:*`。
 7. **两个请求实例禁止复用**:`request.ts`(后台,带 Authorization)与 `app-request.ts`(大屏,三头签名)独立,复用会互相头污染。

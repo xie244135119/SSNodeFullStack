@@ -1,9 +1,9 @@
 /**
  * 大屏分辨率集中声明
- * 模板默认 1 套示例大屏(栏目展示),供路由 meta 与 Screen 布局统一引用。
- * 新增大屏时,只需在此追加一项,路由与布局自动生效。
+ * 模板不带示例大屏(保持干净):新增大屏时在 ScreenList 追加一项、
+ * ScreenHallList 按需加分组,路由与布局自动生效(router 按 ScreenHallList 展开)。
  */
-export type ScreenHallKey = 'demo';
+export type ScreenHallKey = string;
 
 export interface ScreenConfigItem {
   /** 唯一标识 */
@@ -26,18 +26,6 @@ export interface ScreenConfigItem {
  * 大屏分组清单（菜单分组顺序）
  * 真实项目按需增删分组(如多分组/多场景)。
  */
-export const ScreenHallList: { key: ScreenHallKey; name: string }[] = [
-  { key: 'demo', name: '示例分组' }
-];
+export const ScreenHallList: { key: ScreenHallKey; name: string }[] = [];
 
-export const ScreenList: ScreenConfigItem[] = [
-  {
-    key: 'lanmu',
-    name: '栏目展示',
-    path: '/lanmu',
-    component: './pages/ScreenLanMu/LanMu/index',
-    hall: 'demo',
-    width: 1920,
-    height: 1080
-  }
-];
+export const ScreenList: ScreenConfigItem[] = [];

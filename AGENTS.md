@@ -10,7 +10,7 @@
 - **templates/web/** — web 模板(Vite + React18 + AntD5,**纯 JS**,dev 端口 6177)。
 - **templates/backend/** — backend 模板(NestJS + SQLite + TypeORM,TS,dev 端口 3001,全局前缀 `/api`)。
 
-业务主线(模板内):后台配置 → SQLite → 大屏消费;column 栏目模块是端到端示例业务。
+业务主线(模板内):后台配置 → SQLite → 大屏消费;page-data/image 是后台 CRUD 示例业务。
 
 ## 常用命令(仓库根执行)
 
@@ -29,7 +29,7 @@
 3. **`--filter` 派生名**:生成项目子包名是 `<name>-web`/`<name>-backend`(index.js ⑤b 结构化改写),编排脚本与文档里的 `--filter web|backend` 由 transforms 全局规则替换;新增引用子包名的地方要进替换表。
 4. **backend 构建管线 = nest build(tsc)+ terser**:tsc 做类型检查,terser 混淆部署产物(`keep_fnames` 保 Swagger 类名;运维包剥离 `.js.map`/`.d.ts`)。别往 build.cjs 里引回 webpack。
 5. **迁移显式注册**:模板 backend 的 migrations 数组用显式 import;新增迁移模板文件必须同步注册。
-6. **hall 枚举两处镜像**:`templates/web/src/config/column-hall.config.ts` ↔ `templates/backend/src/modules/column/column-hall.ts`。
+6. **新增模板身份串必须同步 cli/transforms.js 替换表**(生成物残留守卫);**前端走 JS、后端走 TS**,不引 workspace:*。
 7. **web 模板是 JS 不是 TS**;两包间不建 `workspace:*` 依赖。
 8. **publish/rollback 走真实 SSH**:只在用户明确要求「发版/回滚」时执行。
 
