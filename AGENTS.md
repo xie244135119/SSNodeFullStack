@@ -5,7 +5,7 @@
 
 ## 仓库身份
 
-- **cli/** — `create-ssnode-app` 脚手架:`pnpm create github:xie244135119/SSNodeFullStack my-app` 生成分层项目的 CLI。
+- **cli/** — `create-ssnode-cli` 脚手架:`pnpm create github:xie244135119/SSNodeFullStack my-app` 生成分层项目的 CLI。
 - **templates/root/** — 生成项目的根胶水(workspace 骨架、scripts/publish+rollback、.gitignore、AGENTS/CLAUDE、README)。
 - **templates/web/** — web 模板(Vite + React18 + AntD5,**纯 JS**,dev 端口 6177)。
 - **templates/backend/** — backend 模板(NestJS + SQLite + TypeORM,TS,dev 端口 3001,全局前缀 `/api`)。

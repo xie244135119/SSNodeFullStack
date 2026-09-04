@@ -1,9 +1,9 @@
-# create-ssnode-app
+# create-ssnode-cli
 
 SSNodeFullStack 脚手架 —— 一条命令生成全栈 / 仅前端 / 仅后端项目。
 
 ```bash
-npm create ssnode-app my-app
+npm create ssnode-cli my-app
 ```
 
 交互问答(目录 → 技术栈 → 展示名 → git init → install)后,生成一个可直接 `pnpm install && pnpm dev` 跑起来的项目,业务面自带两个后台 CRUD 示例(页面管理 / 图片管理:后端模块 + 前端页面),照着扩自己的业务。
@@ -11,8 +11,8 @@ npm create ssnode-app my-app
 ## 用法
 
 ```bash
-npm create ssnode-app my-app                                  # 交互式
-npm create ssnode-app my-app -- --stack fullstack --yes       # 非交互(CI 可用)
+npm create ssnode-cli my-app                                  # 交互式
+npm create ssnode-cli my-app -- --stack fullstack --yes       # 非交互(CI 可用)
 ```
 
 ```
@@ -27,9 +27,9 @@ npm create ssnode-app my-app -- --stack fullstack --yes       # 非交互(CI 可
 ## 交互示例
 
 ```text
-$ npm create ssnode-app my-app
+$ npm create ssnode-cli my-app
 
-┌  create-ssnode-app · SSNodeFullStack 脚手架
+┌  create-ssnode-cli · SSNodeFullStack 脚手架
 │
 ◆  项目目录(相对路径,如 my-app):
 │  my-app

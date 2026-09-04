@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * create-ssnode-app — SSNodeFullStack 脚手架 CLI
+ * create-ssnode-cli — SSNodeFullStack 脚手架 CLI
  *
  * 从本仓库(脚手架源仓)的 templates/ 生成新项目,三种变体:
  *   fullstack  web + backend + 根胶水(monorepo,同模板仓库现状)
@@ -54,7 +54,7 @@ function handleBaseFlags(argv) {
 
   if (argv.includes('-v') || argv.includes('--version')) {
     const pkg = JSON.parse(readFileSync(join(__dirname, 'package.json'), 'utf-8'));
-    console.log(`create-ssnode-app v${pkg.version}`);
+    console.log(`create-ssnode-cli v${pkg.version}`);
     process.exit(0);
   }
   if (argv.includes('-h') || argv.includes('--help')) {
@@ -73,10 +73,10 @@ function handleBaseFlags(argv) {
   }
 }
 
-const HELP_TEXT = `create-ssnode-app — SSNodeFullStack 脚手架
+const HELP_TEXT = `create-ssnode-cli — SSNodeFullStack 脚手架
 
 用法:
-  npm create ssnode-app <目录> [选项]
+  npm create ssnode-cli <目录> [选项]
   node cli/index.js <目录> [选项]        (源仓内)
 
 选项:
@@ -91,7 +91,7 @@ const HELP_TEXT = `create-ssnode-app — SSNodeFullStack 脚手架
 
 不带选项直接运行 = 交互模式(问答式)。
 示例:
-  npm create ssnode-app my-app
+  npm create ssnode-cli my-app
   node cli/index.js /tmp/demo --stack fullstack --yes`;
 
 async function main() {
@@ -112,7 +112,7 @@ async function main() {
   let pm = argPm || availablePMs[0];
 
   console.clear();
-  p.intro('create-ssnode-app · SSNodeFullStack 脚手架');
+  p.intro('create-ssnode-cli · SSNodeFullStack 脚手架');
 
   // ── ① 项目路径 ──
   let targetDir;
@@ -254,7 +254,7 @@ async function main() {
     const pkgPath = join(targetDir, 'package.json');
     const pkg = JSON.parse(readFileSync(pkgPath, 'utf-8'));
     pkg.name = name;
-    pkg.description = `${displayName}(create-ssnode-app 生成)`;
+    pkg.description = `${displayName}(create-ssnode-cli 生成)`;
     writeFileSync(pkgPath, JSON.stringify(pkg, null, 2) + '\n');
     // web/backend 子包名:<name>-web / <name>-backend(与 --filter 派生名一致)
     for (const [dir, suffix] of [['web', '-web'], ['backend', '-backend']]) {
@@ -268,7 +268,7 @@ async function main() {
     const pkgPath = join(targetDir, 'package.json');
     const pkg = JSON.parse(readFileSync(pkgPath, 'utf-8'));
     pkg.name = name;
-    pkg.description = `${displayName}(create-ssnode-app 生成)`;
+    pkg.description = `${displayName}(create-ssnode-cli 生成)`;
     writeFileSync(pkgPath, JSON.stringify(pkg, null, 2) + '\n');
   }
 
@@ -334,7 +334,7 @@ async function main() {
       s.start('git init…');
       run('git', ['init'], targetDir);
       run('git', ['add', '-A'], targetDir);
-      run('git', ['commit', '-m', `init: ${name}(create-ssnode-app 生成)`], targetDir, true);
+      run('git', ['commit', '-m', `init: ${name}(create-ssnode-cli 生成)`], targetDir, true);
       s.message('git 仓库已建立');
     }
   }
@@ -400,7 +400,7 @@ function singleStackAgents(stack, pm = 'pnpm') {
   const cmd = (script) => (pm === 'npm' ? `npm run ${script}` : `${pm} ${script}`);
   const common = `面向 AI 编码代理(Claude Code / Codex / Cursor 等)与协作者的工作指南。
 
-> 本项目由 create-ssnode-app 生成(${stack} 单包变体)。响应契约 {code,message,data}、双轨鉴权、
+> 本项目由 create-ssnode-cli 生成(${stack} 单包变体)。响应契约 {code,message,data}、双轨鉴权、
 > 密钥占位约定等完整规范见源仓 templates/root/AGENTS.md(脚手架源仓)。
 `;
   if (stack === 'web') {

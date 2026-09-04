@@ -2,7 +2,7 @@
 
 > 个人全栈项目脚手架。从某全栈项目抽离公共框架而来:可视化大屏(只读)+ 后台管理系统(配置台)+ NestJS 后端(SQLite)。业务主线:**后台配置 → SQLite → 大屏消费**。
 
-本项目由 `create-ssnode-app` 生成 —— 包名/标题/DB 名/密钥已自动替换注入,「必改清单」第 1、2 类已完成,只剩部署凭证与 lockfile 两项手工步骤。框架层(双轨鉴权、SQLite 加固、docker/systemd/pm2 部署引擎、Capistrano 回滚)开箱即用,业务面已收敛到最小示例。
+本项目由 `create-ssnode-cli` 生成 —— 包名/标题/DB 名/密钥已自动替换注入,「必改清单」第 1、2 类已完成,只剩部署凭证与 lockfile 两项手工步骤。框架层(双轨鉴权、SQLite 加固、docker/systemd/pm2 部署引擎、Capistrano 回滚)开箱即用,业务面已收敛到最小示例。
 
 ---
 

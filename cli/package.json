@@ -1,10 +1,10 @@
 {
-  "name": "create-ssnode-app",
-  "version": "0.1.8",
+  "name": "create-ssnode-cli",
+  "version": "0.1.0",
   "description": "SSNodeFullStack 脚手架 — 生成全栈 / 仅前端 / 仅后端项目(Vite+React+AntD / NestJS+SQLite)",
   "type": "module",
   "bin": {
-    "create-ssnode-app": "index.js"
+    "create-ssnode-cli": "index.js"
   },
   "files": [
     "index.js",
@@ -35,7 +35,7 @@
     "vite",
     "datav",
     "admin-dashboard",
-    "create-ssnode-app"
+    "create-ssnode-cli"
   ],
   "license": "ISC",
   "repository": {

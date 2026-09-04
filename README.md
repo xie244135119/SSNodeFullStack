@@ -10,7 +10,7 @@
 
 ```bash
 # 从 npm(正式分发渠道,版本 = npm 包版本)
-npm create ssnode-app my-app
+npm create ssnode-cli my-app
 
 # 本地源仓直接跑(开发模板时)
 node cli/index.js my-app
@@ -38,7 +38,7 @@ CLI 自动完成:
 ## 仓库结构
 
 ```
-cli/                    create-ssnode-app CLI(交互/拷贝/替换/密钥)
+cli/                    create-ssnode-cli CLI(交互/拷贝/替换/密钥)
   index.js              主体流程
   transforms.js         确定性替换表(纯数据,每条规则注明实测出处)
   secrets.js            密钥生成与注入(纯函数)

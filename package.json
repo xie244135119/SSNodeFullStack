@@ -1,7 +1,7 @@
 {
   "name": "ssnodefullstack",
   "version": "0.1.0",
-  "description": "SSNodeFullStack — 脚手架源仓(create-ssnode-app CLI + templates)",
+  "description": "SSNodeFullStack — 脚手架源仓(create-ssnode-cli CLI + templates)",
   "private": true,
   "engines": {
     "node": ">=20.11.0"
@@ -16,7 +16,7 @@
     "dev": "pnpm --filter web --filter backend --parallel run dev",
     "build": "pnpm --filter web --filter backend run build",
     "lint": "pnpm -r run lint",
-    "test": "pnpm --filter create-ssnode-app run test"
+    "test": "pnpm --filter create-ssnode-cli run test"
   },
   "devDependencies": {
     "node-ssh": "13.1.0",
