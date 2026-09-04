@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48">
+  <!-- 通用抽象节点网络标志(非公司 logo):深色圆角底 + 三节点拓扑,呼应全栈/节点主题 -->
+  <rect width="48" height="48" rx="10" fill="#181d26"/>
+  <g stroke="#4db8e8" stroke-width="2.5">
+    <path d="M24 12 36 32" fill="none"/>
+    <path d="M24 12 12 32" fill="none"/>
+    <path d="M12 32 36 32" fill="none"/>
+  </g>
+  <g fill="#4db8e8">
+    <circle cx="24" cy="12" r="4"/>
+    <circle cx="12" cy="32" r="4"/>
+    <circle cx="36" cy="32" r="4"/>
+  </g>
+</svg>

@@ -188,7 +188,7 @@ export default function BackgroundLayout() {
         <div className={styles.background} ref={backgroundElementRef}>
           {/* 顶部导航 */}
           <div className={styles.header}>
-            <img className={styles.logo} alt="logo" src="/logo.png" />
+            <img className={styles.logo} alt="logo" src="/logo.svg" />
             <span className={styles.logotext}>{ProjectConfig.title}</span>
             <div style={{ flex: 1 }} />
             <div className={styles.userview}>
