@@ -8,7 +8,7 @@
  *   backend    仅后端(单包工程,管理走 Swagger)
  *
  * 流程:prompts 问答 → 拷贝模板 → transforms 身份替换 → secrets 密钥注入
- *      → (可选) git init + 首次 commit → (可选) pnpm install → 打印剩余手工步骤
+ *      → (可选) git init + 首次 commit → (可选) 依赖安装(pnpm/yarn/npm 自动探测)→ 打印剩余手工步骤
  *
  * 用法:
  *   npm create github:xie244135119/SSNodeFullStack my-app
@@ -50,7 +50,7 @@ function isValidName(name) {
 
 /** 基础指令与参数校验;命中 -v/-h 直接输出退出 */
 function handleBaseFlags(argv) {
-  const KNOWN_FLAGS = new Set(['--stack', '--yes', '-v', '--version', '-h', '--help']);
+  const KNOWN_FLAGS = new Set(['--stack', '--pm', '--yes', '-v', '--version', '-h', '--help']);
 
   if (argv.includes('-v') || argv.includes('--version')) {
     const pkg = JSON.parse(readFileSync(join(__dirname, 'package.json'), 'utf-8'));
@@ -65,7 +65,7 @@ function handleBaseFlags(argv) {
   for (let i = 0; i < argv.length; i++) {
     const a = argv[i];
     if (!a.startsWith('-')) continue;
-    if (a === '--stack') { i += 1; continue; } // 跳过其取值
+    if (a === '--stack' || a === '--pm') { i += 1; continue; } // 跳过其取值
     if (!KNOWN_FLAGS.has(a)) {
       console.error(`✗ 未知选项:${a}\n\n${HELP_TEXT}`);
       process.exit(1);
@@ -84,7 +84,8 @@ const HELP_TEXT = `create-ssnode-app — SSNodeFullStack 脚手架
                                    fullstack = web + backend monorepo
                                    web       = 仅前端(checkToken=false 免登录)
                                    backend   = 仅后端(管理走 Swagger /docs)
-  --yes                            非交互模式下跳过 git init / pnpm install 询问
+  --pm <pnpm|npm|yarn>            生成项目用的包管理器(默认自动探测,优先 pnpm)
+  --yes                            非交互模式下跳过 git init / 依赖安装询问
   -v, --version                    显示版本
   -h, --help                       显示本帮助
 
@@ -98,7 +99,15 @@ async function main() {
   handleBaseFlags(argv);
   const argPath = argv.find((a) => !a.startsWith('--') && !a.startsWith('-'));
   const argStack = argv.includes('--stack') ? argv[argv.indexOf('--stack') + 1] : null;
+  const argPm = argv.includes('--pm') ? argv[argv.indexOf('--pm') + 1] : null;
   const isCI = argv.includes('--yes') || !!argStack; // 非交互模式(--stack 即全参数)
+
+  // 包管理器:显式指定 > 自动探测(pnpm → yarn → npm,node 自带 npm 兜底)
+  let pm = argPm || detectPM();
+  if (!['pnpm', 'npm', 'yarn'].includes(pm)) {
+    p.cancel(`未知 --pm:${pm}(pnpm | npm | yarn)`);
+    process.exit(1);
+  }
 
   console.clear();
   p.intro('create-ssnode-app · SSNodeFullStack 脚手架');
@@ -184,7 +193,7 @@ async function main() {
     const envConfig = readFileSync(join(targetDir, 'public', 'env.config.js'), 'utf-8');
     writeFileSync(join(targetDir, 'public', 'env.config.js'), envConfig.replace('checkToken: true', 'checkToken: false'));
     // 单包变体不拷 AGENTS/CLAUDE(全栈工作指南,单包下大量失效),生成精简版
-    writeFileSync(join(targetDir, 'AGENTS.md'), singleStackAgents('web'));
+    writeFileSync(join(targetDir, 'AGENTS.md'), singleStackAgents('web', pm));
   } else {
     // backend 模板直接作为单包工程根
     copyDir(join(TEMPLATES_DIR, 'backend'), targetDir);
@@ -192,12 +201,12 @@ async function main() {
     // backend-only 的 .gitignore 需要补 backend 段(模板根 .gitignore 是全栈视角)
     const gi = readFileSync(join(targetDir, '.gitignore'), 'utf-8');
     writeFileSync(join(targetDir, '.gitignore'), gi.replace(/^backend\//gm, '').replace(/^web\//gm, ''));
-    writeFileSync(join(targetDir, 'AGENTS.md'), singleStackAgents('backend'));
+    writeFileSync(join(targetDir, 'AGENTS.md'), singleStackAgents('backend', pm));
   }
   s.message('模板就位');
 
   // ── ⑤ transforms 身份替换 ──
-  const { globalRules, fileRules } = buildTransforms(id);
+  const { globalRules, fileRules } = buildTransforms(id, pm);
   let transformHits = 0;
   const walk = (dir) => {
     const entries = readdirSync(dir, { withFileTypes: true });
@@ -334,39 +343,41 @@ async function main() {
     }
   }
 
-  // ── ⑨ pnpm install ──
+  // ── ⑨ 依赖安装(pm = 探测/指定的包管理器) ──
   let installed = false;
   if (!isCI) {
-    const doInstall = await p.confirm({ message: '现在执行 pnpm install?', initialValue: true });
+    const doInstall = await p.confirm({ message: `现在执行 ${pm} install?`, initialValue: true });
     if (!p.isCancel(doInstall) && doInstall) {
-      installed = run('pnpm', ['install'], targetDir);
+      installed = run(pm, ['install'], targetDir);
     }
   }
 
   // ── ⑩ 剩余手工步骤 ──
-  p.note(nextSteps(stack, targetDir, installed), '接下来(脚手架搞不定的部分)');
+  p.note(nextSteps(stack, targetDir, installed, pm), '接下来(脚手架搞不定的部分)');
   p.outro('Happy hacking!');
 }
 
-function nextSteps(stack, targetDir, installed) {
+function nextSteps(stack, targetDir, installed, pm) {
   const lines = [`cd ${targetDir}`];
-  if (!installed) lines.push('pnpm install');
+  if (!installed) lines.push(`${pm} install`);
   if (stack === 'fullstack') {
-    lines.push('pnpm dev          # web(6177)+ backend(3001)');
+    lines.push(`${pm} ${pm === 'npm' ? 'run ' : ''}dev          # web(6177)+ backend(3001)${pm === 'npm' ? '(workspace 顺序执行)' : ''}`);
     lines.push('→ 部署前:配 SSH 凭证 web/scripts/server.config.json + backend/scripts/server.config.cjs(从 example 拷)');
     lines.push('→ 首次部署前:backend/ 下重生 package-lock.json(见 README「第 4 步」)');
   } else if (stack === 'web') {
-    lines.push('pnpm dev          # 端口 6177;checkToken=false 免登录');
+    lines.push(`${pm} ${pm === 'npm' ? 'run ' : ''}dev          # 端口 6177;checkToken=false 免登录`);
     lines.push('→ 接后端时:public/env.config.js 的 checkToken 改回 true,并填 .env.* 签名密钥');
   } else {
-    lines.push('pnpm dev          # 端口 3001;管理走 /api/docs Swagger');
+    lines.push(`${pm} ${pm === 'npm' ? 'run ' : ''}dev          # 端口 3001;管理走 /api/docs Swagger`);
     lines.push('→ 部署前:配 SSH 凭证 scripts/server.config.cjs(从 example 拷)');
   }
   return lines.join('\n');
 }
 
 /** 单包变体的精简 AGENTS.md(全栈版指南在源仓 templates/root/AGENTS.md) */
-function singleStackAgents(stack) {
+function singleStackAgents(stack, pm = 'pnpm') {
+  // 单包裸命令:npm 需带 run,yarn/pnpm 直通
+  const cmd = (script) => (pm === 'npm' ? `npm run ${script}` : `${pm} ${script}`);
   const common = `面向 AI 编码代理(Claude Code / Codex / Cursor 等)与协作者的工作指南。
 
 > 本项目由 create-ssnode-app 生成(${stack} 单包变体)。响应契约 {code,message,data}、双轨鉴权、
@@ -381,7 +392,7 @@ ${common}
 - **免登录模式**:public/env.config.js 的 checkToken=false(无后端,AuthLayout 直接放行)。
 - **接后端时**:checkToken 改回 true + .env.development/.env.production 填 VITE_APP_SIGN_KEY(与后端 yaml appSign.signKey 逐字一致)+ vite.config.js proxy 指向后端。
 - **纯 JS 工程**:jsconfig,不写 TS;eslint airbnb;prettier 单引号/100 宽。
-- \`pnpm dev\` 端口 6177;\`pnpm build\` 产物 dist/;\`pnpm lint\` 带 --fix。
+- \`${cmd('dev')}\` 端口 6177;\`${cmd('build')}\` 产物 dist/;\`${cmd('lint')}\` 带 --fix。
 `;
   }
   return `# AGENTS.md
@@ -393,7 +404,7 @@ ${common}
 - **迁移显式注册**:新增迁移必须手动加进 src/database/sqlite.config.ts 的 migrations 数组(既定约定,漏注册 prod 不建表)。
 - **构建** = nest build(tsc)+ terser 混淆;better-sqlite3 v13 需 python3/make/g++ 源码编译。
 - **DB 文件名程序定死**:<name>.prod.sqlite / <name>.dev.sqlite(已随生成物改名,四处同步见 sqlite.config.ts)。
-- \`pnpm dev\` 端口 3001;\`pnpm build\` = webpack 单文件 dist/main.js。
+- \`${cmd('dev')}\` 端口 3001;\`${cmd('build')}\` = nest build(tsc)+ terser 混淆。
 `;
 }
 
@@ -435,6 +446,15 @@ function extnameAllow(filename) {
     filename === '_gitignore' || filename === '_npmrc' ||
     filename === '.prettierignore' || filename === '.dockerignore' || filename.startsWith('.env');
 }
+/** 包管理器探测:优先 pnpm(模板推荐),次 yarn,兜底 npm(node 自带) */
+function detectPM() {
+  for (const pm of ['pnpm', 'yarn']) {
+    const r = spawnSync(pm, ['--version'], { shell: true, stdio: 'pipe' });
+    if (r.status === 0) return pm;
+  }
+  return 'npm';
+}
+
 function run(cmd, args, cwd, quietOk) {
   const r = spawnSync(cmd, args, { cwd, stdio: quietOk ? 'pipe' : 'inherit' });
   return r.status === 0;

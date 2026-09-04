@@ -1,7 +1,7 @@
 /**
  * transforms.js — 确定性文本替换表(纯数据,无副作用)
  *
- * 输入:项目身份变量(name、displayName、dbPrefix、containerName 等)
+ * 输入:项目身份变量(name、displayName、dbPrefix、containerName 等)与包管理器(pm)
  * 输出:按文件路径分组的替换规则数组,由 CLI 对生成物逐文件应用。
  *
  * 原则:
@@ -13,14 +13,70 @@
  */
 
 /**
+ * 按包管理器生成的命令替换规则(模板命令按 pnpm 写,npm/yarn 生成时改写)。
+ * 三家在「workspace 过滤」上的等价形态:
+ *   pnpm:  pnpm --filter  <pkg> run <script>
+ *   npm:   npm  --workspace <pkg> run <script>   (flag 可前置)
+ *   yarn1: yarn workspace    <pkg> run <script>  (子命令,非 flag)
+ * 全 workspace 递归:
+ *   pnpm:  pnpm -r [--parallel] run <script>
+ *   npm:   npm run <script> --workspaces --if-present(顺序执行,无并行)
+ *   yarn1: yarn workspaces run <script>
+ * 裸命令:npm 必须 `npm run <script>`,yarn 可直接 `yarn <script>`,pnpm 可直接。
+ * 顺序敏感:复合长串先替换,裸 `pnpm ` 兜底(yarn 用)。
+ */
+export function buildPmRules(pm, name) {
+  if (pm === 'pnpm') {
+    return [
+      { find: '--filter web', replace: `--filter ${name}-web` },
+      { find: '--filter backend', replace: `--filter ${name}-backend` },
+    ];
+  }
+  if (pm === 'npm') {
+    return [
+      // root scripts(templates/root/package.json 与文档)
+      { find: 'pnpm -r --parallel run ', replace: 'npm run --workspaces --if-present ' },
+      { find: 'pnpm -r run ', replace: 'npm run --workspaces --if-present ' },
+      // 编排脚本(scripts/{publish,rollback}.cjs 的 spawn)与文档命令
+      { find: 'pnpm --filter web', replace: `npm --workspace ${name}-web` },
+      { find: 'pnpm --filter backend', replace: `npm --workspace ${name}-backend` },
+      // 裸命令(install 除外,npm 裸动词只有内建命令)
+      { find: 'pnpm install', replace: 'npm install' },
+      { find: 'pnpm dev', replace: 'npm run dev' },
+      { find: 'pnpm build', replace: 'npm run build' },
+      { find: 'pnpm lint', replace: 'npm run lint' },
+      { find: 'pnpm test', replace: 'npm run test' },
+      // publish/rollback:npm 裸动词是内建命令(publish 会发包!),必须 run
+      { find: 'pnpm publish', replace: 'npm run publish' },
+      { find: 'pnpm rollback', replace: 'npm run rollback' },
+      { find: 'pnpm monorepo', replace: 'npm monorepo' },
+    ];
+  }
+  // yarn1(经典):动词直通 + workspaces 子命令
+  return [
+    { find: 'pnpm -r --parallel run ', replace: 'yarn workspaces run ' },
+    { find: 'pnpm -r run ', replace: 'yarn workspaces run ' },
+    { find: 'pnpm --filter web', replace: `yarn workspace ${name}-web` },
+    { find: 'pnpm --filter backend', replace: `yarn workspace ${name}-backend` },
+    // publish:yarn 裸动词是内建发包命令,必须 run;rollback 顺带统一
+    { find: 'pnpm publish', replace: 'yarn run publish' },
+    { find: 'pnpm rollback', replace: 'yarn run rollback' },
+    { find: 'pnpm monorepo', replace: 'yarn monorepo' },
+    // 兜底:剩余 pnpm 动词直通(yarn 裸动词语义一致:install/dev/build/lint/test)
+    { find: 'pnpm ', replace: 'yarn ' },
+  ];
+}
+
+/**
  * @param {object} id 项目身份
  * @param {string} id.name            项目名(npm 合法,如 my-app)
  * @param {string} id.displayName     展示名(中文标题,如 我的项目)
  * @param {string} id.dbPrefix        SQLite 文件名前缀(默认 = name)
  * @param {string} id.containerName   部署容器/服务名(默认 = `${name}-backend`)
  * @param {string} id.appRoot         服务器部署根目录(默认 = `/data/server/${name}`)
+ * @param {string} pm                 包管理器(pnpm|npm|yarn,默认 pnpm;影响命令改写规则)
  */
-export function buildTransforms(id) {
+export function buildTransforms(id, pm = 'pnpm') {
   const name = id.name;
   const displayName = id.displayName || name;
   const dbPrefix = id.dbPrefix || name;
@@ -53,10 +109,8 @@ export function buildTransforms(id) {
     { find: '/data/server/fullstack-template', replace: appRoot },
     // 模板身份字面量(兜底,放最后;上面的长串已先被替换,不会误伤)
     { find: 'fullstack-template', replace: name },
-    // 编排脚本与文档里的 --filter 子包名(包名已派生为 <name>-web / <name>-backend,见 index.js ⑤b)
-    // 出处:templates/root/scripts/{publish,rollback}.cjs、AGENTS.md/README.md/CLAUDE.md 示例命令
-    { find: '--filter web', replace: `--filter ${name}-web` },
-    { find: '--filter backend', replace: `--filter ${name}-backend` },
+    // 包管理器命令改写(pnpm 模板命令 → npm/yarn 等价形态;子包名派生同在)
+    ...buildPmRules(pm, name),
   ];
 
   // ── 按文件的定点规则(精确锚点,避免全局误伤) ──

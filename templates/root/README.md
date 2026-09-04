@@ -53,7 +53,7 @@ mkdir -p /tmp/be-lock && cp backend/package.json /tmp/be-lock/ \
 模板带 **2 个后台 CRUD 示例**(后端模块 + 前端页面,照着扩自己的业务):
 - **页面管理**:`page_data` 表的增删改查(`backend/src/modules/page-data/` + `web/src/pages/Backend/PageData/`)
 - **图片管理**:上传 + 预览 + 改名 + 删除,删除同步删物理文件(`backend/src/modules/image/` + `web/src/pages/Backend/Image/`)
-- 大屏清单/分辨率:`web/config/screen.config.ts`(模板不带示例大屏,新增条目路由自动展开)
+- 示例大屏:`web/src/pages/Screen/Demo/`(静态数据、纯前端;新增大屏 = 照抄一条路由 + 建对应页面,分辨率写路由 meta)
 - 路由树/后台菜单:`web/config/router.config.ts`
 - 新增后端模块:`backend/src/modules/<x>/` + `entities/` + 迁移 + `app.module.ts` 注册
 - 新增大屏受保护接口:controller 路由加 `@UseGuards(AppSignGuard)`
@@ -109,7 +109,7 @@ UI 规范见 `docs/airtable/DESIGN.md`;后期想换自己的风格:替换/修改
 | 接口契约 / 请求拦截 | `web/src/services/api.ts`、`request.ts`、`app-request.ts` |
 | 新增大屏受保护接口 | 对应 controller 路由加 `@UseGuards(AppSignGuard)` |
 | 后台主题 token | `web/src/styles/theme.ts` |
-| 大屏清单 / 分辨率 | `web/config/screen.config.ts` |
+| 大屏路由 / 分辨率 | `web/config/router.config.ts`(分辨率写路由 `meta`) |
 | 路由 | `web/config/router.config.ts` |
 | 后端 yaml 配置 | `backend/config/config.{develop,prod}.yaml` |
 | 发布/回滚编排 | `scripts/publish.cjs`、`rollback.cjs` |

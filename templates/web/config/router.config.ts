@@ -1,7 +1,6 @@
 import path from 'path-browserify';
 import React from 'react';
-import { UserOutlined, FileTextOutlined, PictureOutlined } from '@ant-design/icons';
-import { ScreenList, ScreenHallList } from './screen.config';
+import { UserOutlined, FileTextOutlined, PictureOutlined, DesktopOutlined } from '@ant-design/icons';
 
 const RouterConfig: RouteConfigItem[] = [
   {
@@ -33,23 +32,21 @@ const RouterConfig: RouteConfigItem[] = [
         path: '/screen',
         component: './layouts/Screen',
         children: [
-          // 大屏页面路由按分组维度展开（分辨率基准由 meta 携带，Screen 布局按需读取）。
-          // 模板不带示例大屏:在 config/screen.config.ts 的 ScreenList/ScreenHallList
-          // 里追加条目 + 建 pages/ 下对应页面组件后,此处自动展开生效。
-          ...ScreenHallList.map((hall) => ({
-            name: hall.name,
-            children: ScreenList.filter((item) => item.hall === hall.key).map((item) => ({
-              name: item.name,
-              path: item.path,
-              hideInMenu: false,
-              component: item.component,
-              meta: {
-                width: item.width,
-                height: item.height,
-                key: item.key
-              }
-            }))
-          })),
+          {
+            path: '/',
+            redirect: './demo'
+          },
+          {
+            // 静态示例大屏:纯前端、零接口,展示大屏框架能力(1920×1080 基准 +
+            // transform:scale 自适配,meta 分辨率由 Screen 布局读取)。
+            // 新增大屏:照抄一条路由(改 path/name/component 与 meta 分辨率)+
+            // 在 pages/Screen/ 下建对应页面即可。
+            path: './demo',
+            name: '示例大屏',
+            icon: React.createElement(DesktopOutlined),
+            component: './pages/Screen/Demo/index',
+            meta: { width: 1920, height: 1080, key: 'demo' }
+          },
           {
             component: './pages/404'
           }

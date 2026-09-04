@@ -1,6 +1,6 @@
 {
   "name": "create-ssnode-app",
-  "version": "0.1.5",
+  "version": "0.1.6",
   "description": "SSNodeFullStack 脚手架 — 生成全栈 / 仅前端 / 仅后端项目(Vite+React+AntD / NestJS+SQLite)",
   "type": "module",
   "bin": {

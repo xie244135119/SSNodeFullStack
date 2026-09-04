@@ -27,7 +27,7 @@ dev 下 vite proxy 把 `/api`、`/ws`、`/static/uploads` 转给 `127.0.0.1:3001
 ## 目录地图
 
 ```
-web/config/             入口配置:router.config.ts(路由树/后台菜单)、screen.config.ts(大屏清单/分辨率)、project.config.ts(标题/品牌)
+web/config/             入口配置:router.config.ts(路由树/后台菜单/大屏路由,大屏分辨率写路由 meta)、project.config.ts(标题/品牌)
 web/src/services/       api.ts(接口清单+契约拦截)、request.ts(后台 JWT 实例)、app-request.ts(大屏签名实例,二者禁止复用;大屏接口目录 screen/ 按需自建)
 web/src/styles/         theme.ts(Airtable 风格后台主题 token)
 backend/src/common/     guard / filter / interceptor(响应包装、双轨鉴权)

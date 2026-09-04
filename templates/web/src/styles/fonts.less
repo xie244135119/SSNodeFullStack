@@ -1,79 +1,16 @@
 /**
- * 自定义字体注册
- * 字体文件位于 src/static/fonts
+ * 自定义字体注册(模板不带字体文件,保持干净)
+ *
+ * 使用方法:把 .otf/.woff2 放到 src/static/fonts/ 下,按下面示例加 @font-face:
+ *
+ *   @font-face {
+ *     font-family: 'DINPro';
+ *     src: url('../static/fonts/DINPro-Regular.otf') format('opentype');
+ *     font-weight: 400;
+ *     font-style: normal;
+ *     font-display: swap;
+ *   }
+ *
+ * 注:模板内部分组件按名字引用了 DINPro / SourceHanSansCN(如 echarts loading、
+ * 示例大屏数字),字体未注册时自动回退系统 sans-serif,不影响运行。
  */
-
-/* ============ DINPro ============ */
-@font-face {
-  font-family: 'DINPro';
-  src: url('../static/fonts/DINPro-Light.otf') format('opentype');
-  font-weight: 300;
-  font-style: normal;
-  font-display: swap;
-}
-
-@font-face {
-  font-family: 'DINPro';
-  src: url('../static/fonts/DINPro-Regular.otf') format('opentype');
-  font-weight: 400;
-  font-style: normal;
-  font-display: swap;
-}
-
-@font-face {
-  font-family: 'DINPro';
-  src: url('../static/fonts/DINPro-Medium.otf') format('opentype');
-  font-weight: 500;
-  font-style: normal;
-  font-display: swap;
-}
-
-@font-face {
-  font-family: 'DINPro';
-  src: url('../static/fonts/DINPro-Bold.otf') format('opentype');
-  font-weight: 700;
-  font-style: normal;
-  font-display: swap;
-}
-
-@font-face {
-  font-family: 'DINPro';
-  src: url('../static/fonts/DINPro-Black.otf') format('opentype');
-  font-weight: 900;
-  font-style: normal;
-  font-display: swap;
-}
-
-/* ============ D-DIN 别名（复用 DINPro 文件，兼容现有 font-family: D-DIN 引用） ============ */
-@font-face {
-  font-family: 'D-DIN';
-  src: url('../static/fonts/DINPro-Regular.otf') format('opentype');
-  font-weight: normal;
-  font-style: normal;
-  font-display: swap;
-}
-
-@font-face {
-  font-family: 'D-DIN';
-  src: url('../static/fonts/DINPro-Bold.otf') format('opentype');
-  font-weight: bold;
-  font-style: normal;
-  font-display: swap;
-}
-
-/* ============ 思源黑体 Source Han Sans CN ============ */
-@font-face {
-  font-family: 'SourceHanSansCN';
-  src: url('../static/fonts/SourceHanSansCN-ExtraLight-2.otf') format('opentype');
-  font-weight: 200;
-  font-style: normal;
-  font-display: swap;
-}
-
-@font-face {
-  font-family: 'SourceHanSansCN';
-  src: url('../static/fonts/SourceHanSansCN-Regular-2.otf') format('opentype');
-  font-weight: 400;
-  font-style: normal;
-  font-display: swap;
-}
