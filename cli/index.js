@@ -102,12 +102,14 @@ async function main() {
   const argPm = argv.includes('--pm') ? argv[argv.indexOf('--pm') + 1] : null;
   const isCI = argv.includes('--yes') || !!argStack; // 非交互模式(--stack 即全参数)
 
-  // 包管理器:显式指定 > 自动探测(pnpm → yarn → npm,node 自带 npm 兜底)
-  let pm = argPm || detectPM();
-  if (!['pnpm', 'npm', 'yarn'].includes(pm)) {
-    p.cancel(`未知 --pm:${pm}(pnpm | npm | yarn)`);
+  // 包管理器候选:探测机器可用的(pnpm → yarn → npm;node 自带 npm 兜底)。
+  // --pm 显式指定优先;交互模式在「展示名」之后询问(可用多于一种时);isCI 直接取首选。
+  const availablePMs = detectAvailablePMs();
+  if (argPm && !['pnpm', 'npm', 'yarn'].includes(argPm)) {
+    p.cancel(`未知 --pm:${argPm}(pnpm | npm | yarn)`);
     process.exit(1);
   }
+  let pm = argPm || availablePMs[0];
 
   console.clear();
   p.intro('create-ssnode-app · SSNodeFullStack 脚手架');
@@ -169,6 +171,21 @@ async function main() {
     });
     if (p.isCancel(r)) process.exit(0);
     displayName = String(r).trim();
+  }
+
+  // ── ③b 包管理器(交互且可用多于一种时询问;默认 = 探测到的首选 pnpm) ──
+  if (!argPm && !isCI && availablePMs.length > 1) {
+    const r = await p.select({
+      message: '使用哪个包管理器?(决定生成项目的命令形态)',
+      options: availablePMs.map((x, i) => ({
+        value: x,
+        label: x,
+        hint: i === 0 ? '推荐(模板默认)' : '已探测可用'
+      })),
+      initialValue: availablePMs[0]
+    });
+    if (p.isCancel(r)) process.exit(0);
+    pm = r;
   }
 
   const s = p.spinner();
@@ -346,7 +363,10 @@ async function main() {
   // ── ⑨ 依赖安装(pm = 探测/指定的包管理器) ──
   let installed = false;
   if (!isCI) {
-    const doInstall = await p.confirm({ message: `现在执行 ${pm} install?`, initialValue: true });
+    const doInstall = await p.confirm({
+      message: `现在执行 ${pm} install?(No = 跳过,稍后自己装)`,
+      initialValue: true
+    });
     if (!p.isCancel(doInstall) && doInstall) {
       installed = run(pm, ['install'], targetDir);
     }
@@ -446,13 +466,14 @@ function extnameAllow(filename) {
     filename === '_gitignore' || filename === '_npmrc' ||
     filename === '.prettierignore' || filename === '.dockerignore' || filename.startsWith('.env');
 }
-/** 包管理器探测:优先 pnpm(模板推荐),次 yarn,兜底 npm(node 自带) */
-function detectPM() {
-  for (const pm of ['pnpm', 'yarn']) {
+/** 包管理器探测:返回机器上可用的列表(优先序 pnpm → yarn → npm;node 自带 npm 兜底) */
+function detectAvailablePMs() {
+  const available = [];
+  for (const pm of ['pnpm', 'yarn', 'npm']) {
     const r = spawnSync(pm, ['--version'], { shell: true, stdio: 'pipe' });
-    if (r.status === 0) return pm;
+    if (r.status === 0) available.push(pm);
   }
-  return 'npm';
+  return available.length ? available : ['npm'];
 }
 
 function run(cmd, args, cwd, quietOk) {

@@ -45,6 +45,14 @@ $ npm create ssnode-app my-app
 ◆  项目展示名(后台顶栏/Swagger/登录页标题):
 │  我的应用
 │
+◆  使用哪个包管理器?(决定生成项目的命令形态)
+│  ● pnpm
+│    推荐(模板默认)
+│  ○ yarn
+│    已探测可用
+│  ○ npm
+│    已探测可用
+│
 ◆  git init + 首次 commit?
 │  ● Yes / ○ No
 │
